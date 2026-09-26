@@ -62,8 +62,6 @@ const detail: StorefrontProductDetail = {
   sku: 'CALC-MODELO',
   description: 'Algodón peinado',
   price: 3.5,
-  categoryId: 'c1',
-  categoryName: 'Calcetines',
   inStock: true,
   availableQuantity: 4,
   images: [

@@ -16,8 +16,6 @@ const detail: StorefrontProductDetail = {
   sku: 'CALC-MODELO',
   description: null,
   price: 3.5,
-  categoryId: null,
-  categoryName: null,
   inStock: true,
   availableQuantity: 3,
   images: [],

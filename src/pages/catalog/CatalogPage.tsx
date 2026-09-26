@@ -5,12 +5,9 @@ import { ProductGrid, ProductGridSkeleton } from '@/features/catalog/components/
 import { Pagination } from '@/features/catalog/components/Pagination'
 import {
   CATALOG_PAGE_SIZE,
-  fetchCategories,
   fetchProducts,
   selectCatalogItems,
   selectCatalogTotalCount,
-  selectCategories,
-  selectCategoriesStatus,
   selectProductsError,
   selectProductsStatus,
 } from '@/store/catalogSlice'
@@ -31,7 +28,6 @@ function parseCatalogQuery(params: URLSearchParams): CatalogQueryState {
 
   return {
     search: params.get('buscar')?.trim() ?? '',
-    categoryId: params.get('categoria'),
     sort: isCatalogSort(params.get('orden')) ? params.get('orden') as CatalogSort : 'name',
     page: Number.isFinite(rawPage) ? Math.max(1, Math.trunc(rawPage)) : 1,
     pageSize: CATALOG_PAGE_SIZE,
@@ -41,7 +37,6 @@ function parseCatalogQuery(params: URLSearchParams): CatalogQueryState {
 function buildSearchParams(query: CatalogQueryState): URLSearchParams {
   const params = new URLSearchParams()
   if (query.search) params.set('buscar', query.search)
-  if (query.categoryId) params.set('categoria', query.categoryId)
   if (query.sort !== 'name') params.set('orden', query.sort)
   if (query.page > 1) params.set('pagina', String(query.page))
   return params
@@ -58,8 +53,6 @@ export function CatalogPage() {
   const totalCount = useAppSelector(selectCatalogTotalCount)
   const status = useAppSelector(selectProductsStatus)
   const error = useAppSelector(selectProductsError)
-  const categories = useAppSelector(selectCategories)
-  const categoriesStatus = useAppSelector(selectCategoriesStatus)
   const storeName = useAppSelector(selectStorefrontName)
 
   useDocumentTitle(
@@ -72,10 +65,6 @@ export function CatalogPage() {
       request.abort()
     }
   }, [dispatch, query, reloadKey])
-
-  useEffect(() => {
-    dispatch(fetchCategories())
-  }, [dispatch])
 
   useEffect(() => {
     if (query.page > 1) {
@@ -112,12 +101,7 @@ export function CatalogPage() {
 
       <div className={styles.layout}>
         <aside className={styles.rail} aria-label="Filtros del catálogo">
-          <CatalogFilters
-            categories={categories}
-            categoriesStatus={categoriesStatus}
-            query={query}
-            onQueryChange={updateQuery}
-          />
+          <CatalogFilters query={query} onQueryChange={updateQuery} />
         </aside>
 
         <section className={styles.results} aria-live="polite" aria-busy={isLoading}>
@@ -144,7 +128,7 @@ export function CatalogPage() {
               <button
                 type="button"
                 className={styles.primaryAction}
-                onClick={() => updateQuery({ search: '', categoryId: null })}
+                onClick={() => updateQuery({ search: '' })}
               >
                 Ver todo el catálogo
               </button>

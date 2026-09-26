@@ -1,13 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { describe, expect, it } from 'vitest'
-import type { StorefrontCategory, StorefrontProduct } from '@/api/types'
+import type { StorefrontProduct } from '@/api/types'
 import {
   catalogReducer,
-  fetchCategories,
   fetchProducts,
   initialCatalogQuery,
   selectCatalogItems,
-  selectCategories,
 } from './catalogSlice'
 
 const product: StorefrontProduct = {
@@ -16,8 +14,6 @@ const product: StorefrontProduct = {
   name: 'Calcetín Runner',
   description: null,
   price: 3.5,
-  categoryId: null,
-  categoryName: null,
   thumbUrl: null,
   mediumUrl: null,
   inStock: true,
@@ -73,18 +69,5 @@ describe('catalogSlice', () => {
 
     expect(store.getState().catalog.productsStatus).toBe('failed')
     expect(store.getState().catalog.productsError).toBe('Sin conexión')
-  })
-
-  it('guarda las categorías al completar la carga', () => {
-    const store = createStore()
-    const categories: StorefrontCategory[] = [
-      { id: 'c1', name: 'Ropa', description: null, parentId: null },
-    ]
-
-    store.dispatch(fetchCategories.pending('cat-1', undefined))
-    store.dispatch(fetchCategories.fulfilled(categories, 'cat-1', undefined))
-
-    expect(selectCategories(store.getState())).toEqual(categories)
-    expect(store.getState().catalog.categoriesStatus).toBe('succeeded')
   })
 })

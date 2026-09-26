@@ -4,7 +4,6 @@ import type {
   CatalogQuery,
   RawStorefrontProduct,
   RawStorefrontProductDetail,
-  StorefrontCategory,
   StorefrontProduct,
   StorefrontProductDetail,
   StorefrontProductPage,
@@ -32,7 +31,6 @@ export async function listStorefrontProducts(
     {
       params: {
         search: query.search?.trim() || undefined,
-        categoryId: query.categoryId ?? undefined,
         sort: query.sort,
         page: query.page,
         pageSize: query.pageSize,
@@ -56,16 +54,4 @@ export async function getStorefrontProduct(
   )
 
   return { ...response.data, kind: mapKind(response.data.kind) }
-}
-
-export async function listStorefrontCategories(
-  tenantId: string,
-  signal?: AbortSignal,
-): Promise<StorefrontCategory[]> {
-  const response = await api.get<StorefrontCategory[]>(
-    storefrontUrl(tenantId, '/categories'),
-    { signal },
-  )
-
-  return response.data
 }

@@ -21,7 +21,6 @@ export function ProductCard({ product }: ProductCardProps) {
         {!product.inStock ? <span className={styles.soldOut}>Agotado</span> : null}
       </div>
       <div className={styles.body}>
-        <p className={styles.category}>{product.categoryName ?? 'General'}</p>
         <h3 className={styles.name}>{product.name}</h3>
         <div className={styles.footer}>
           <p className={styles.price}>{formatPrice(product.price)}</p>

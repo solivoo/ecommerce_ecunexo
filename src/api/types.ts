@@ -13,7 +13,6 @@ export interface StorefrontConfig {
 
 export interface CatalogQuery {
   search?: string
-  categoryId?: string | null
   sort?: CatalogSort
   page?: number
   pageSize?: number
@@ -25,8 +24,6 @@ export interface StorefrontProduct {
   name: string
   description: string | null
   price: number | null
-  categoryId: string | null
-  categoryName: string | null
   thumbUrl: string | null
   mediumUrl: string | null
   inStock: boolean
@@ -40,13 +37,6 @@ export interface StorefrontProductPage {
   totalCount: number
   page: number
   pageSize: number
-}
-
-export interface StorefrontCategory {
-  id: string
-  name: string
-  description: string | null
-  parentId: string | null
 }
 
 export interface StorefrontImage {
@@ -101,8 +91,6 @@ export interface StorefrontProductDetail {
   sku: string | null
   description: string | null
   price: number | null
-  categoryId: string | null
-  categoryName: string | null
   inStock: boolean
   availableQuantity: number
   images: StorefrontImage[]

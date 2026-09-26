@@ -126,14 +126,6 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
     <>
       <nav aria-label="Ruta de navegación" className={styles.breadcrumb}>
         <Link to="/">Catálogo</Link>
-        {product.categoryName ? (
-          <>
-            <span aria-hidden="true">›</span>
-            <Link to={product.categoryId ? `/?categoria=${product.categoryId}` : '/'}>
-              {product.categoryName}
-            </Link>
-          </>
-        ) : null}
         <span aria-hidden="true">›</span>
         <span className={styles.current}>{product.name}</span>
       </nav>
@@ -148,7 +140,6 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
         </div>
 
         <div className={styles.info}>
-          <p className={styles.category}>{product.categoryName ?? 'General'}</p>
           <h1 className={styles.title}>{product.name}</h1>
 
           <div className={styles.priceRow}>

@@ -1,9 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { StorefrontProduct } from '@/api/types'
 import { catalogReducer } from '@/store/catalogSlice'
 import { storefrontReducer } from '@/store/storefrontSlice'
@@ -12,14 +11,12 @@ import { CatalogPage } from './CatalogPage'
 
 vi.mock('@/api/catalogApi', () => ({
   listStorefrontProducts: vi.fn(),
-  listStorefrontCategories: vi.fn(),
   getStorefrontProduct: vi.fn(),
 }))
 
-import { listStorefrontCategories, listStorefrontProducts } from '@/api/catalogApi'
+import { listStorefrontProducts } from '@/api/catalogApi'
 
 const mockedProducts = vi.mocked(listStorefrontProducts)
-const mockedCategories = vi.mocked(listStorefrontCategories)
 
 const product: StorefrontProduct = {
   id: 'p1',
@@ -27,8 +24,6 @@ const product: StorefrontProduct = {
   name: 'Calcetín Runner',
   description: null,
   price: 3.5,
-  categoryId: null,
-  categoryName: null,
   thumbUrl: null,
   mediumUrl: null,
   inStock: true,
@@ -68,10 +63,6 @@ function renderPage(initialEntries: string[] = ['/']) {
 }
 
 describe('CatalogPage', () => {
-  beforeEach(() => {
-    mockedCategories.mockResolvedValue([])
-  })
-
   it('muestra los productos del catálogo', async () => {
     mockedProducts.mockResolvedValue({ items: [product], totalCount: 1, page: 1, pageSize: 24 })
 
@@ -93,20 +84,6 @@ describe('CatalogPage', () => {
       search: 'calcetin',
       page: 2,
     })
-  })
-
-  it('filtra por categoría al hacer clic en el rail', async () => {
-    mockedCategories.mockResolvedValue([
-      { id: 'c1', name: 'Ropa', description: null, parentId: null },
-    ])
-    mockedProducts.mockResolvedValue({ items: [product], totalCount: 1, page: 1, pageSize: 24 })
-
-    renderPage()
-
-    await userEvent.click(await screen.findByRole('button', { name: 'Ropa' }))
-
-    await waitFor(() => expect(mockedProducts).toHaveBeenCalledTimes(2))
-    expect(mockedProducts.mock.calls.at(-1)?.[1]).toMatchObject({ categoryId: 'c1', page: 1 })
   })
 
   it('muestra el estado de error con opción de reintentar', async () => {

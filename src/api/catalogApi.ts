@@ -1,9 +1,11 @@
 import { api } from './client'
+import { STOREFRONT_FACET_KEYS } from './types'
 import type {
   CatalogItemKind,
   CatalogQuery,
   RawStorefrontProduct,
   RawStorefrontProductDetail,
+  StorefrontFacets,
   StorefrontProduct,
   StorefrontProductDetail,
   StorefrontProductPage,
@@ -21,6 +23,30 @@ function mapProduct(raw: RawStorefrontProduct): StorefrontProduct {
   return { ...raw, kind: mapKind(raw.kind) }
 }
 
+function buildProductParams(query: CatalogQuery): URLSearchParams {
+  const params = new URLSearchParams()
+
+  const search = query.search?.trim()
+  if (search) params.set('search', search)
+  if (query.sort) params.set('sort', query.sort)
+  if (query.page) params.set('page', String(query.page))
+  if (query.pageSize) params.set('pageSize', String(query.pageSize))
+
+  for (const key of STOREFRONT_FACET_KEYS) {
+    for (const value of query[key] ?? []) {
+      const trimmed = value.trim()
+      if (trimmed) params.append(key, trimmed)
+    }
+  }
+
+  if (query.priceMin !== undefined) params.set('priceMin', String(query.priceMin))
+  if (query.priceMax !== undefined) params.set('priceMax', String(query.priceMax))
+  if (query.inStock) params.set('inStock', 'true')
+  if (query.isNew) params.set('new', 'true')
+
+  return params
+}
+
 export async function listStorefrontProducts(
   tenantId: string,
   query: CatalogQuery,
@@ -28,19 +54,21 @@ export async function listStorefrontProducts(
 ): Promise<StorefrontProductPage> {
   const response = await api.get<StorefrontProductPage>(
     storefrontUrl(tenantId, '/products'),
-    {
-      params: {
-        search: query.search?.trim() || undefined,
-        sort: query.sort,
-        page: query.page,
-        pageSize: query.pageSize,
-      },
-      signal,
-    },
+    { params: buildProductParams(query), signal },
   )
 
   const data = response.data
   return { ...data, items: (data.items as RawStorefrontProduct[]).map(mapProduct) }
+}
+
+export async function listStorefrontFacets(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<StorefrontFacets> {
+  const response = await api.get<StorefrontFacets>(storefrontUrl(tenantId, '/facets'), {
+    signal,
+  })
+  return response.data
 }
 
 export async function getStorefrontProduct(

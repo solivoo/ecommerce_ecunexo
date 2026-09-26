@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { describe, expect, it } from 'vitest'
-import type { StorefrontProduct } from '@/api/types'
+import type { StorefrontFacets, StorefrontProduct } from '@/api/types'
 import {
   catalogReducer,
+  fetchFacets,
   fetchProducts,
   initialCatalogQuery,
   selectCatalogItems,
+  selectFacets,
 } from './catalogSlice'
 
 const product: StorefrontProduct = {
@@ -16,10 +18,27 @@ const product: StorefrontProduct = {
   price: 3.5,
   thumbUrl: null,
   mediumUrl: null,
+  secondMediumUrl: null,
+  colors: [],
   inStock: true,
   hasVariants: false,
   variantCount: 0,
+  isNew: false,
   createdAt: '2026-01-01T00:00:00Z',
+}
+
+const facets: StorefrontFacets = {
+  attributes: [
+    {
+      key: 'talla',
+      label: 'Talla',
+      values: [{ value: 'M', label: 'M', count: 1 }],
+    },
+  ],
+  priceMin: 3.5,
+  priceMax: 3.5,
+  inStockCount: 1,
+  newCount: 0,
 }
 
 const page = { items: [product], totalCount: 1, page: 1, pageSize: 24 }
@@ -29,6 +48,10 @@ function createStore() {
 }
 
 describe('catalogSlice', () => {
+  it('usa relevancia como orden por defecto', () => {
+    expect(initialCatalogQuery.sort).toBe('relevance')
+  })
+
   it('guarda la página al completar la carga', () => {
     const store = createStore()
     const query = { ...initialCatalogQuery }
@@ -69,5 +92,33 @@ describe('catalogSlice', () => {
 
     expect(store.getState().catalog.productsStatus).toBe('failed')
     expect(store.getState().catalog.productsError).toBe('Sin conexión')
+  })
+
+  it('guarda las facetas al completar la carga', () => {
+    const store = createStore()
+
+    store.dispatch(fetchFacets.pending('req-1', undefined))
+    expect(store.getState().catalog.facetsStatus).toBe('loading')
+
+    store.dispatch(fetchFacets.fulfilled(facets, 'req-1', undefined))
+    expect(store.getState().catalog.facetsStatus).toBe('succeeded')
+    expect(selectFacets(store.getState())).toEqual(facets)
+  })
+
+  it('vuelve a idle cuando se aborta la carga de facetas', () => {
+    const store = createStore()
+
+    store.dispatch(fetchFacets.pending('req-1', undefined))
+    store.dispatch(
+      fetchFacets.rejected(
+        new DOMException('aborted', 'AbortError'),
+        'req-1',
+        undefined,
+        undefined,
+        { aborted: true },
+      ),
+    )
+
+    expect(store.getState().catalog.facetsStatus).toBe('idle')
   })
 })

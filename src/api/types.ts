@@ -1,6 +1,18 @@
 export type CatalogItemKind = 'physical' | 'service'
 
-export type CatalogSort = 'name' | 'price_asc' | 'price_desc' | 'newest'
+export type CatalogSort = 'relevance' | 'name' | 'price_asc' | 'price_desc' | 'newest'
+
+export const STOREFRONT_FACET_KEYS = [
+  'talla',
+  'color',
+  'actividad',
+  'cana',
+  'material',
+  'marca',
+  'coleccion',
+] as const
+
+export type StorefrontFacetKey = (typeof STOREFRONT_FACET_KEYS)[number]
 
 export interface StorefrontConfig {
   tenantId: string
@@ -16,6 +28,37 @@ export interface CatalogQuery {
   sort?: CatalogSort
   page?: number
   pageSize?: number
+  talla?: string[]
+  color?: string[]
+  actividad?: string[]
+  cana?: string[]
+  material?: string[]
+  marca?: string[]
+  coleccion?: string[]
+  priceMin?: number
+  priceMax?: number
+  inStock?: boolean
+  isNew?: boolean
+}
+
+export interface StorefrontFacetValue {
+  value: string
+  label: string
+  count: number
+}
+
+export interface StorefrontFacetAttribute {
+  key: string
+  label: string
+  values: StorefrontFacetValue[]
+}
+
+export interface StorefrontFacets {
+  attributes: StorefrontFacetAttribute[]
+  priceMin: number | null
+  priceMax: number | null
+  inStockCount: number
+  newCount: number
 }
 
 export interface StorefrontProduct {
@@ -26,9 +69,12 @@ export interface StorefrontProduct {
   price: number | null
   thumbUrl: string | null
   mediumUrl: string | null
+  secondMediumUrl: string | null
+  colors: string[]
   inStock: boolean
   hasVariants: boolean
   variantCount: number
+  isNew: boolean
   createdAt: string
 }
 

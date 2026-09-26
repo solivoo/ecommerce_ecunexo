@@ -48,6 +48,10 @@ const EMPTY_FORM: CheckoutFormState = {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_PATTERN = /^[+\d][\d\s\-()]{6,}$/
 
+function elapsedMsSince(start: number): number {
+  return start > 0 ? Date.now() - start : 0
+}
+
 function validateForm(form: CheckoutFormState): CheckoutFormErrors {
   const errors: CheckoutFormErrors = {}
 
@@ -81,6 +85,12 @@ export function CheckoutPage() {
   const [optionsError, setOptionsError] = useState<string | null>(null)
   const [optionsReloadKey, setOptionsReloadKey] = useState(0)
   const [form, setForm] = useState<CheckoutFormState>(EMPTY_FORM)
+  const [website, setWebsite] = useState('')
+  const startedAtRef = useRef(0)
+
+  useEffect(() => {
+    startedAtRef.current = Date.now()
+  }, [])
   const [errors, setErrors] = useState<CheckoutFormErrors>({})
   const [paymentChoice, setPaymentChoice] = useState('')
   const [shippingChoice, setShippingChoice] = useState('')
@@ -186,6 +196,8 @@ export function CheckoutPage() {
         quantity: item.quantity,
       })),
       notes: form.notes.trim() ? form.notes.trim() : null,
+      website: website.trim() ? website : null,
+      formElapsedMs: elapsedMsSince(startedAtRef.current),
     }
 
     setSaving(true)
@@ -197,6 +209,7 @@ export function CheckoutPage() {
           ...result,
           paymentMethodLabel: selectedPayment?.label,
           shippingMethodLabel: selectedShipping?.label,
+          whatsappPhone: options?.whatsappPhone ?? null,
         },
       })
       dispatch(clearCart())
@@ -245,6 +258,16 @@ export function CheckoutPage() {
         </div>
       ) : options ? (
         <form className={styles.layout} noValidate onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="website"
+            className={styles.honeypot}
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+          />
           <section className={styles.formColumn} aria-label="Datos del pedido">
             <fieldset className={styles.group}>
               <legend className={styles.legend}>Tus datos</legend>

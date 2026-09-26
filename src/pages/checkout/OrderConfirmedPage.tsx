@@ -18,6 +18,7 @@ const STATUS_LABELS: Record<string, string> = {
 type ConfirmedOrder = StorefrontOrderResult & {
   paymentMethodLabel?: string
   shippingMethodLabel?: string
+  whatsappPhone?: string | null
 }
 
 export function OrderConfirmedPage() {
@@ -30,6 +31,13 @@ export function OrderConfirmedPage() {
   if (!order) {
     return <Navigate to="/" replace />
   }
+
+  const whatsappNumber = (order.whatsappPhone ?? '').replace(/\D/g, '')
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        `Hola, envío el comprobante de mi pedido ${order.orderNumber} por ${formatPrice(order.totalAmount)}.`,
+      )}`
+    : null
 
   return (
     <div className={styles.page}>
@@ -77,6 +85,17 @@ export function OrderConfirmedPage() {
             Te contactaremos para confirmar el pago.
           </p>
         </section>
+
+        {whatsappHref ? (
+          <a
+            className={styles.whatsapp}
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Enviar comprobante por WhatsApp
+          </a>
+        ) : null}
 
         <Link to="/" className={styles.action}>
           Seguir comprando

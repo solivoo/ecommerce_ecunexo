@@ -120,3 +120,20 @@
     padding: var(--space-5) var(--space-4);
   }
 }
+
+.whatsapp {
+  display: block;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #1ebe5d;
+  background: #e7f8ee;
+  color: #146c38;
+  text-decoration: none;
+}
+
+.whatsapp:hover {
+  background: #d3f2e0;
+}

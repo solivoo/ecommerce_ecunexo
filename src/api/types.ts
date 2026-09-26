@@ -170,6 +170,7 @@ export interface CheckoutShippingMethod {
 export interface CheckoutOptions {
   paymentMethods: CheckoutPaymentMethod[]
   shippingMethods: CheckoutShippingMethod[]
+  whatsappPhone?: string | null
 }
 
 export interface CreateStorefrontOrderCustomerInput {
@@ -198,6 +199,10 @@ export interface CreateStorefrontOrderInput {
   shippingMethod: string
   items: CreateStorefrontOrderItemInput[]
   notes: string | null
+  /** Campo trampa anti-bot: debe ir vacío. */
+  website?: string | null
+  /** Milisegundos desde que se abrió el formulario (fricción mínima anti-bot). */
+  formElapsedMs?: number | null
 }
 
 export interface StorefrontOrderResult {

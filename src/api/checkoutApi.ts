@@ -25,6 +25,7 @@ export async function getCheckoutOptions(
       instructions: method.instructions ?? null,
     })),
     shippingMethods: data.shippingMethods,
+    whatsappPhone: data.whatsappPhone ?? null,
   }
 }
 

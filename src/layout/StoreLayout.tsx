@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
+import { resolveApiUrl } from '@/api/client'
 import { GlobalStatus } from '@/app/GlobalStatus'
+import { letterFavicon, setFavicon } from '@/lib/favicon'
 import { STORE_NAME } from '@/lib/store'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
@@ -24,9 +26,15 @@ export function StoreLayout() {
   }, [dispatch])
 
   useEffect(() => {
-    if (config?.primaryColorHex) {
+    if (!config) return
+    if (config.primaryColorHex) {
       document.documentElement.style.setProperty('--store-accent', config.primaryColorHex)
     }
+    setFavicon(
+      config.logoUrl
+        ? resolveApiUrl(config.logoUrl)
+        : letterFavicon(config.name, config.primaryColorHex),
+    )
   }, [config])
 
   if (!config) {

@@ -1,0 +1,67 @@
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-block-start: var(--space-5);
+}
+
+.group {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.legend {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0;
+  margin-block-end: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.legendValue {
+  font-weight: 400;
+  color: var(--steel);
+}
+
+.swatches,
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.swatch {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 var(--space-2);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  font-size: var(--text-xs);
+}
+
+.swatchActive {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--ink);
+}
+
+.option {
+  min-width: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  font-size: var(--text-sm);
+}
+
+.option:hover {
+  background-color: var(--signal-soft);
+}
+
+.optionActive {
+  background-color: var(--ink);
+  color: var(--paper);
+}

@@ -1,0 +1,23 @@
+.footer {
+  margin-block-start: auto;
+  border-top: var(--border-w) solid var(--ink);
+  background-color: var(--paper-deep);
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  max-width: var(--container);
+  margin-inline: auto;
+  padding: var(--space-5) var(--gutter);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.brand {
+  font-weight: 800;
+  color: var(--ink);
+}

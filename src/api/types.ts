@@ -154,3 +154,60 @@ export interface RawStorefrontProduct extends Omit<StorefrontProduct, 'kind'> {
 export interface RawStorefrontProductDetail extends Omit<StorefrontProductDetail, 'kind'> {
   kind: number | string
 }
+
+export interface CheckoutPaymentMethod {
+  code: string
+  label: string
+  instructions: string | null
+}
+
+export interface CheckoutShippingMethod {
+  code: string
+  label: string
+  cost: number
+}
+
+export interface CheckoutOptions {
+  paymentMethods: CheckoutPaymentMethod[]
+  shippingMethods: CheckoutShippingMethod[]
+}
+
+export interface CreateStorefrontOrderCustomerInput {
+  name: string
+  email: string
+  phone: string
+  taxId: string | null
+}
+
+export interface CreateStorefrontOrderShippingInput {
+  address: string
+  city: string
+  reference: string | null
+}
+
+export interface CreateStorefrontOrderItemInput {
+  catalogItemId: string
+  quantity: number
+}
+
+export interface CreateStorefrontOrderInput {
+  requestId: string
+  customer: CreateStorefrontOrderCustomerInput
+  shipping: CreateStorefrontOrderShippingInput
+  paymentMethod: string
+  shippingMethod: string
+  items: CreateStorefrontOrderItemInput[]
+  notes: string | null
+}
+
+export interface StorefrontOrderResult {
+  orderId: string
+  orderNumber: string
+  status: string
+  subtotal: number
+  taxAmount: number
+  shippingCost: number
+  totalAmount: number
+  paymentMethod: string
+  paymentInstructions: string | null
+}

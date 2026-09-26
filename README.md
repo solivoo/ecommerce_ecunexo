@@ -46,8 +46,13 @@ pnpm test:coverage  # cobertura
 | Ruta | Vista |
 |---|---|
 | `/` | Catálogo con filtros sincronizados a la URL (`?buscar=&categoria=&tipo=&orden=&pagina=`) |
-| `/producto/:productId` | Ficha con galería y selector de variantes |
+| `/producto/:productId` | Ficha con galería, selector de variantes y agregar al carrito |
+| `/checkout` | Checkout invitado (datos, pago, envío y resumen) |
+| `/pedido/confirmado` | Confirmación del pedido con instrucciones de pago |
 | `*` | No encontrado |
+
+El carrito es anónimo, se persiste en `localStorage('ecunexo.cart.v1')` y se limpia al
+cambiar de tenant. El drawer del carrito se abre desde el encabezado.
 
 ## Multi-tenant por dominio
 
@@ -113,22 +118,27 @@ GET /api/v1/public/storefront/resolve?host=mitienda.com
 GET /api/v1/public/tenants/{tenantId}/storefront/products?search=&categoryId=&kind=&sort=&page=&pageSize=
 GET /api/v1/public/tenants/{tenantId}/storefront/products/{productId}
 GET /api/v1/public/tenants/{tenantId}/storefront/categories
+GET /api/v1/public/tenants/{tenantId}/storefront/checkout-options
+POST /api/v1/public/tenants/{tenantId}/storefront/orders
 ```
 
 Son anónimos; la API valida el tenant, el entitlement `ecommerce` y solo expone
 **productos físicos activos** (los servicios no se publican en la vitrina) con campos
-públicos (sin costo, sin atributos internos).
+públicos (sin costo, sin atributos internos). El pedido es de invitado: el cliente envía
+`requestId`, datos de contacto y envío, métodos elegidos e ítems; el servidor recalcula
+precio, envío e impuestos e ignora los montos del navegador.
 
 ## Estructura
 
 ```
 src/
-├─ api/        client.ts (axios + interceptores), catalogApi, errors, types
+├─ api/        client.ts (axios + interceptores), catalogApi, checkoutApi, errors, types
 ├─ app/        store, router, GlobalStatus
-├─ store/      slices catalog/product/ui + thunks
+├─ store/      slices cart/catalog/product/storefront/ui + thunks
 ├─ features/catalog/  componentes de vitrina (grid, filtros, galería, variantes)
+├─ features/cart/     CartDrawer
 ├─ layout/     StoreHeader, StoreFooter, StoreLayout
-├─ pages/      catalog, product, not-found, errors
+├─ pages/      catalog, product, checkout, not-found, errors
 ├─ lib/        formato, helpers, configuración de tienda
 └─ styles/     tokens.css + global.css
 ```
@@ -139,10 +149,10 @@ se cancelan al cambiar de filtros o desmontar, y las respuestas obsoletas se des
 ## Pruebas
 
 Vitest + Testing Library: interceptores axios, normalización de errores, slices
-(carga, error y descarte de respuestas obsoletas), vitrina y ficha con selección de variantes.
+(carga, error y descarte de respuestas obsoletas), vitrina, ficha con selección de
+variantes, carrito (merge, límites, persistencia), drawer, checkout y confirmación.
 
 ## Pendiente
 
-- Carrito y checkout (pedidos ecommerce).
 - Infraestructura Cloudflare for SaaS en producción (CNAME + TLS por dominio).
 - Theming avanzado por tenant (tipografía, radios) sobre `--store-accent`.

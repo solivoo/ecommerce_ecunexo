@@ -11,7 +11,10 @@ import {
 } from '@/features/catalog/utils/variantSelection'
 import { formatPrice, formatQuantity } from '@/lib/format'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
+import { CART_MAX_QUANTITY, addItem } from '@/store/cartSlice'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectStorefrontName } from '@/store/storefrontSlice'
+import { openCartDrawer } from '@/store/uiSlice'
 import {
   clearProduct,
   fetchProduct,
@@ -19,7 +22,6 @@ import {
   selectProductError,
   selectProductStatus,
 } from '@/store/productSlice'
-import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import styles from './ProductDetailPage.module.css'
 
 export function ProductDetailPage() {
@@ -101,9 +103,16 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
 
   const images = selectedVariant?.images?.length ? selectedVariant.images : product.images
   const isAvailable = selectedVariant ? selectedVariant.inStock : product.inStock
-  const quantity = selectedVariant?.availableQuantity ?? product.availableQuantity
+  const quantityAvailable = selectedVariant
+    ? selectedVariant.availableQuantity
+    : product.availableQuantity
   const price = selectedVariant?.price ?? product.price
   const displaySku = selectedVariant?.sku ?? product.sku
+  const maxQuantity = Math.min(
+    CART_MAX_QUANTITY,
+    Math.max(0, Math.floor(quantityAvailable)),
+  )
+  const requiresVariantSelection = axes.length > 0 && selectedVariant === null
 
   const handleAxisChange = useCallback(
     (axisName: string, value: string) => {
@@ -146,7 +155,9 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
             <p className={styles.price}>{formatPrice(price)}</p>
             {isAvailable ? (
               <span className={styles.stockOk}>
-                {quantity > 0 ? `${formatQuantity(quantity)} disponibles` : 'Disponible'}
+                {quantityAvailable > 0
+                  ? `${formatQuantity(quantityAvailable)} disponibles`
+                  : 'Disponible'}
               </span>
             ) : (
               <span className={styles.stockOut}>Agotado</span>
@@ -180,6 +191,20 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
             />
           ) : null}
 
+          <AddToCartPanel
+            key={selectedVariant?.id ?? product.id}
+            catalogItemId={selectedVariant?.id ?? product.id}
+            productName={product.name}
+            sku={displaySku}
+            price={price}
+            thumbUrl={
+              selectedVariant?.mainImageThumbUrl ?? product.images[0]?.thumbUrl ?? null
+            }
+            isAvailable={isAvailable}
+            maxQuantity={maxQuantity}
+            requiresVariantSelection={requiresVariantSelection}
+          />
+
           {product.description ? (
             <p className={styles.description}>{product.description}</p>
           ) : null}
@@ -205,6 +230,130 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
         </div>
       </div>
     </>
+  )
+}
+
+interface AddToCartPanelProps {
+  catalogItemId: string
+  productName: string
+  sku: string | null
+  price: number | null
+  thumbUrl: string | null
+  isAvailable: boolean
+  maxQuantity: number
+  requiresVariantSelection: boolean
+}
+
+function AddToCartPanel({
+  catalogItemId,
+  productName,
+  sku,
+  price,
+  thumbUrl,
+  isAvailable,
+  maxQuantity,
+  requiresVariantSelection,
+}: AddToCartPanelProps) {
+  const dispatch = useAppDispatch()
+  const [quantity, setQuantity] = useState(1)
+  const [addedName, setAddedName] = useState<string | null>(null)
+  const canAdd = isAvailable && maxQuantity > 0 && price !== null
+
+  const handleQuantityChange = (value: string) => {
+    const parsed = Number.parseInt(value, 10)
+    if (!Number.isFinite(parsed)) {
+      setQuantity(1)
+      return
+    }
+    setQuantity(Math.min(maxQuantity, Math.max(1, parsed)))
+  }
+
+  const handleAdd = () => {
+    if (!canAdd || price === null) return
+
+    dispatch(
+      addItem({
+        catalogItemId,
+        name: productName,
+        sku,
+        price,
+        quantity,
+        thumbUrl,
+      }),
+    )
+    setAddedName(productName)
+  }
+
+  return (
+    <div className={styles.purchase}>
+      <div className={styles.quantityField}>
+        <label className={styles.quantityLabel} htmlFor="product-quantity">
+          Cantidad
+        </label>
+        <div className={styles.quantity}>
+          <button
+            type="button"
+            aria-label="Disminuir cantidad"
+            disabled={!canAdd || quantity <= 1}
+            onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+          >
+            −
+          </button>
+          <input
+            id="product-quantity"
+            className={styles.quantityInput}
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={Math.max(1, maxQuantity)}
+            value={quantity}
+            disabled={!canAdd}
+            onChange={(event) => handleQuantityChange(event.target.value)}
+          />
+          <button
+            type="button"
+            aria-label="Aumentar cantidad"
+            disabled={!canAdd || quantity >= maxQuantity}
+            onClick={() =>
+              setQuantity((current) => Math.min(maxQuantity, current + 1))
+            }
+          >
+            +
+          </button>
+        </div>
+      </div>
+      <button
+        type="button"
+        className={styles.addToCart}
+        disabled={!canAdd}
+        onClick={handleAdd}
+      >
+        Agregar al carrito
+      </button>
+      {!canAdd ? (
+        <p className={styles.addHint}>
+          {!isAvailable || maxQuantity === 0
+            ? 'No hay stock disponible para esta opción.'
+            : price === null
+              ? 'El precio no está disponible por ahora.'
+              : requiresVariantSelection
+                ? 'Elige una opción para continuar.'
+                : 'No disponible.'}
+        </p>
+      ) : null}
+      {addedName ? (
+        <p className={styles.addNotice} role="status">
+          {addedName} se agregó al carrito.{' '}
+          <button
+            type="button"
+            className={styles.addNoticeLink}
+            onClick={() => dispatch(openCartDrawer())}
+          >
+            Ver carrito
+          </button>
+        </p>
+      ) : null}
+    </div>
   )
 }
 

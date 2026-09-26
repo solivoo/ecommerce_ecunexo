@@ -15,6 +15,10 @@
   transform: translate(-2px, -2px);
 }
 
+.mediaLink {
+  display: block;
+}
+
 .media {
   position: relative;
   display: flex;
@@ -41,7 +45,7 @@
 }
 
 .card:hover .imageSecondary,
-.card:focus-visible .imageSecondary {
+.card:focus-within .imageSecondary {
   opacity: 1;
 }
 
@@ -104,6 +108,10 @@
   overflow: hidden;
 }
 
+.name a:hover {
+  background-color: var(--signal-soft);
+}
+
 .swatches {
   display: flex;
   align-items: center;
@@ -126,6 +134,7 @@
 
 .footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-2);
@@ -139,7 +148,36 @@
   font-variant-numeric: tabular-nums;
 }
 
-.variants {
-  font-size: var(--text-xs);
+.cta,
+.ctaSecondary {
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cta {
+  background-color: var(--signal);
+}
+
+.cta:hover:not(:disabled) {
+  background-color: var(--ink);
+  color: var(--paper);
+}
+
+.cta:disabled {
+  background-color: var(--paper-deep);
   color: var(--steel);
+  cursor: not-allowed;
+}
+
+.ctaSecondary {
+  background-color: var(--surface);
+}
+
+.ctaSecondary:hover {
+  background-color: var(--ink);
+  color: var(--paper);
 }

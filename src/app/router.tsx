@@ -22,6 +22,22 @@ export const router = createBrowserRouter([
           return { Component: ProductDetailPage }
         },
       },
+      {
+        path: 'checkout',
+        lazy: async () => {
+          const { CheckoutPage } = await import('@/pages/checkout/CheckoutPage')
+          return { Component: CheckoutPage }
+        },
+      },
+      {
+        path: 'pedido/confirmado',
+        lazy: async () => {
+          const { OrderConfirmedPage } = await import(
+            '@/pages/checkout/OrderConfirmedPage'
+          )
+          return { Component: OrderConfirmedPage }
+        },
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

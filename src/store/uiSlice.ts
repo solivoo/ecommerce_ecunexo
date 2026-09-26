@@ -4,11 +4,13 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 export interface UiState {
   pendingHttp: number
   httpMessage: string | null
+  cartDrawerOpen: boolean
 }
 
 const initialState: UiState = {
   pendingHttp: 0,
   httpMessage: null,
+  cartDrawerOpen: false,
 }
 
 const uiSlice = createSlice({
@@ -27,10 +29,23 @@ const uiSlice = createSlice({
     clearHttpMessage(state) {
       state.httpMessage = null
     },
+    openCartDrawer(state) {
+      state.cartDrawerOpen = true
+    },
+    closeCartDrawer(state) {
+      state.cartDrawerOpen = false
+    },
   },
 })
 
-export const { beginRequest, endRequest, setHttpMessage, clearHttpMessage } = uiSlice.actions
+export const {
+  beginRequest,
+  endRequest,
+  setHttpMessage,
+  clearHttpMessage,
+  openCartDrawer,
+  closeCartDrawer,
+} = uiSlice.actions
 
 export const uiReducer = uiSlice.reducer
 
@@ -40,4 +55,8 @@ export function selectPendingHttp(state: { ui: UiState }): number {
 
 export function selectHttpMessage(state: { ui: UiState }): string | null {
   return state.ui.httpMessage
+}
+
+export function selectCartDrawerOpen(state: { ui: UiState }): boolean {
+  return state.ui.cartDrawerOpen
 }

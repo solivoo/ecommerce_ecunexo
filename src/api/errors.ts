@@ -3,11 +3,13 @@ import type { AxiosError } from 'axios'
 
 export interface ApiError {
   status: number | null
+  code: string | null
   message: string
   detail: string | null
 }
 
 interface ProblemDetails {
+  type?: string
   title?: string
   detail?: string
   message?: string
@@ -24,8 +26,19 @@ export function isApiError(value: unknown): value is ApiError {
   return (
     typeof candidate.message === 'string'
     && (candidate.status === null || typeof candidate.status === 'number')
+    && (candidate.code === null || typeof candidate.code === 'string')
     && (candidate.detail === null || typeof candidate.detail === 'string')
   )
+}
+
+function problemCode(type: string | undefined): string | null {
+  if (!type) return null
+  const raw = type.includes('/errors/') ? type.split('/errors/').pop()! : type
+  try {
+    return decodeURIComponent(raw) || null
+  } catch {
+    return raw || null
+  }
 }
 
 export function normalizeApiError(error: unknown, fallback = FALLBACK_MESSAGE): ApiError {
@@ -37,20 +50,25 @@ export function normalizeApiError(error: unknown, fallback = FALLBACK_MESSAGE): 
     const status = axiosError.response?.status ?? null
 
     if (!axiosError.response) {
-      return { status, message: transportErrorMessage(axiosError), detail: null }
+      return { status, code: null, message: transportErrorMessage(axiosError), detail: null }
     }
 
     const message =
       data?.detail ?? data?.message ?? data?.title ?? data?.error ?? fallback
 
-    return { status, message, detail: data?.detail ?? null }
+    return {
+      status,
+      code: problemCode(data?.type),
+      message,
+      detail: data?.detail ?? null,
+    }
   }
 
   if (error instanceof Error && error.message) {
-    return { status: null, message: error.message, detail: null }
+    return { status: null, code: null, message: error.message, detail: null }
   }
 
-  return { status: null, message: fallback, detail: null }
+  return { status: null, code: null, message: fallback, detail: null }
 }
 
 function transportErrorMessage(error: AxiosError): string {

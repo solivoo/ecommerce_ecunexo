@@ -1,0 +1,122 @@
+.page {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-8);
+}
+
+.card {
+  max-width: 640px;
+  margin-inline: auto;
+  padding: var(--space-6);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-hard);
+}
+
+.eyebrow {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ok);
+}
+
+.title {
+  margin-block-start: var(--space-1);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.lead {
+  margin-block-start: var(--space-3);
+  color: var(--ink-soft);
+}
+
+.totals {
+  margin-block-start: var(--space-5);
+  padding-block: var(--space-3);
+  border-block: 1px solid var(--line);
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-1);
+}
+
+.totalRow dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.grandTotal {
+  margin-block-start: var(--space-2);
+  padding-block-start: var(--space-2);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-lg);
+  font-weight: 800;
+}
+
+.payment {
+  margin-block-start: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background-color: var(--paper);
+}
+
+.paymentTitle {
+  font-size: var(--text-base);
+  font-weight: 800;
+}
+
+.paymentMethod {
+  margin-block-start: var(--space-1);
+  font-weight: 700;
+}
+
+.instructions {
+  margin-block-start: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.notice {
+  margin-block-start: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ok);
+}
+
+.action {
+  display: block;
+  width: 100%;
+  margin-block-start: var(--space-5);
+  padding: var(--space-3) var(--space-5);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius-sm);
+  background-color: var(--signal);
+  font-weight: 700;
+  text-align: center;
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.action:hover {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: var(--space-5) var(--space-4);
+  }
+}

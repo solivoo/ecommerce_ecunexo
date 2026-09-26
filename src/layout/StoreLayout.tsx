@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { resolveApiUrl } from '@/api/client'
 import { GlobalStatus } from '@/app/GlobalStatus'
+import { CartDrawer } from '@/features/cart/components/CartDrawer'
 import { letterFavicon, setFavicon } from '@/lib/favicon'
 import { STORE_NAME } from '@/lib/store'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -60,6 +61,7 @@ export function StoreLayout() {
     <div className={styles.shell}>
       <GlobalStatus />
       <StoreHeader />
+      <CartDrawer />
       <main className={styles.main}>
         <Outlet />
       </main>

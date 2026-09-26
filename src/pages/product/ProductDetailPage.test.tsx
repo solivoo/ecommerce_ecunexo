@@ -5,6 +5,7 @@ import { Provider } from 'react-redux'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import type { StorefrontProductDetail, StorefrontVariant } from '@/api/types'
+import { cartReducer } from '@/store/cartSlice'
 import { productReducer } from '@/store/productSlice'
 import { storefrontReducer } from '@/store/storefrontSlice'
 import { uiReducer } from '@/store/uiSlice'
@@ -95,7 +96,12 @@ const detail: StorefrontProductDetail = {
 
 function renderPage() {
   const store = configureStore({
-    reducer: { ui: uiReducer, storefront: storefrontReducer, product: productReducer },
+    reducer: {
+      ui: uiReducer,
+      storefront: storefrontReducer,
+      product: productReducer,
+      cart: cartReducer,
+    },
     preloadedState: {
       storefront: {
         config: {
@@ -121,6 +127,8 @@ function renderPage() {
       </MemoryRouter>
     </Provider>,
   )
+
+  return store
 }
 
 describe('ProductDetailPage', () => {
@@ -198,5 +206,37 @@ describe('ProductDetailPage', () => {
 
     expect(await screen.findByText('Producto no disponible')).toBeInTheDocument()
     expect(screen.getByText('El producto no está disponible.')).toBeInTheDocument()
+  })
+
+  it('agrega al carrito la variante elegida con la cantidad seleccionada', async () => {
+    mockedGetProduct.mockResolvedValue(detail)
+    const store = renderPage()
+
+    await screen.findByRole('heading', { name: 'Calcetín Runner' })
+    await userEvent.click(screen.getByRole('button', { name: 'Aumentar cantidad' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Agregar al carrito' }))
+
+    expect(store.getState().cart.items).toEqual([
+      {
+        catalogItemId: 'v1',
+        name: 'Calcetín Runner',
+        sku: 'CALC-NEG-39',
+        price: 3.5,
+        quantity: 2,
+        thumbUrl: 'https://cdn/negro-thumb',
+      },
+    ])
+    expect(screen.getByRole('status')).toHaveTextContent('se agregó al carrito')
+  })
+
+  it('deshabilita el botón cuando la variante está agotada', async () => {
+    mockedGetProduct.mockResolvedValue(detail)
+
+    renderPage()
+
+    await screen.findByRole('heading', { name: 'Calcetín Runner' })
+    await userEvent.click(screen.getByRole('button', { name: '42-44' }))
+
+    expect(screen.getByRole('button', { name: 'Agregar al carrito' })).toBeDisabled()
   })
 })

@@ -1,14 +1,18 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { resolveApiUrl } from '@/api/client'
 import { STORE_NAME } from '@/lib/store'
-import { useAppSelector } from '@/store/hooks'
+import { selectCartCount } from '@/store/cartSlice'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectStorefrontConfig } from '@/store/storefrontSlice'
+import { openCartDrawer } from '@/store/uiSlice'
 import styles from './StoreHeader.module.css'
 
 export function StoreHeader() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const config = useAppSelector(selectStorefrontConfig)
+  const cartCount = useAppSelector(selectCartCount)
   const storeName = config?.name ?? STORE_NAME
   const logoUrl = config?.logoUrl ? resolveApiUrl(config.logoUrl) : null
   const query = params.get('buscar') ?? ''
@@ -41,6 +45,17 @@ export function StoreHeader() {
           />
           <button type="submit">Buscar</button>
         </form>
+        <button
+          type="button"
+          className={styles.cart}
+          aria-label={
+            cartCount > 0 ? `Abrir carrito, ${cartCount} artículos` : 'Abrir carrito'
+          }
+          onClick={() => dispatch(openCartDrawer())}
+        >
+          Carrito
+          {cartCount > 0 ? <span className={styles.badge}>{cartCount}</span> : null}
+        </button>
       </div>
     </header>
   )

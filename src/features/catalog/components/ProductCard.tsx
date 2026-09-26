@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { StorefrontProduct } from '@/api/types'
 import { formatPrice } from '@/lib/format'
+import { addItem } from '@/store/cartSlice'
+import { useAppDispatch } from '@/store/hooks'
 import { resolveColorHex } from '../utils/colorSwatch'
 import styles from './ProductCard.module.css'
 
@@ -11,39 +13,63 @@ interface ProductCardProps {
 const MAX_VISIBLE_COLORS = 5
 
 export function ProductCard({ product }: ProductCardProps) {
+  const dispatch = useAppDispatch()
   const imageUrl = product.mediumUrl ?? product.thumbUrl
   const hiddenColors = product.colors.length - MAX_VISIBLE_COLORS
+  const canAdd = !product.hasVariants && product.inStock && product.price !== null
+
+  function handleAdd() {
+    if (product.price === null) return
+    dispatch(
+      addItem({
+        catalogItemId: product.id,
+        name: product.name,
+        sku: null,
+        price: product.price,
+        quantity: 1,
+        thumbUrl: product.thumbUrl,
+      }),
+    )
+  }
 
   return (
-    <Link to={`/producto/${product.id}`} className={styles.card}>
-      <div className={styles.media}>
-        {imageUrl ? (
-          <>
-            <img
-              className={styles.imagePrimary}
-              src={imageUrl}
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-            {product.secondMediumUrl ? (
+    <article className={styles.card}>
+      <Link
+        to={`/producto/${product.id}`}
+        className={styles.mediaLink}
+        aria-label={product.name}
+      >
+        <div className={styles.media}>
+          {imageUrl ? (
+            <>
               <img
-                className={styles.imageSecondary}
-                src={product.secondMediumUrl}
+                className={styles.imagePrimary}
+                src={imageUrl}
                 alt=""
                 loading="lazy"
                 decoding="async"
               />
-            ) : null}
-          </>
-        ) : (
-          <span className={styles.placeholder} aria-hidden="true" />
-        )}
-        {product.isNew ? <span className={styles.new}>Nuevo</span> : null}
-        {!product.inStock ? <span className={styles.soldOut}>Agotado</span> : null}
-      </div>
+              {product.secondMediumUrl ? (
+                <img
+                  className={styles.imageSecondary}
+                  src={product.secondMediumUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : null}
+            </>
+          ) : (
+            <span className={styles.placeholder} aria-hidden="true" />
+          )}
+          {product.isNew ? <span className={styles.new}>Nuevo</span> : null}
+          {!product.inStock ? <span className={styles.soldOut}>Agotado</span> : null}
+        </div>
+      </Link>
       <div className={styles.body}>
-        <h3 className={styles.name}>{product.name}</h3>
+        <h3 className={styles.name}>
+          <Link to={`/producto/${product.id}`}>{product.name}</Link>
+        </h3>
         {product.colors.length > 0 ? (
           <ul className={styles.swatches} aria-label="Colores disponibles">
             {product.colors.slice(0, MAX_VISIBLE_COLORS).map((color) => {
@@ -66,12 +92,25 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className={styles.footer}>
           <p className={styles.price}>{formatPrice(product.price)}</p>
           {product.hasVariants ? (
-            <p className={styles.variants}>
-              {product.variantCount} {product.variantCount === 1 ? 'opción' : 'opciones'}
-            </p>
-          ) : null}
+            <Link to={`/producto/${product.id}`} className={styles.ctaSecondary}>
+              Elegir opciones
+            </Link>
+          ) : product.inStock ? (
+            <button
+              type="button"
+              className={styles.cta}
+              disabled={!canAdd}
+              onClick={handleAdd}
+            >
+              Agregar
+            </button>
+          ) : (
+            <button type="button" className={styles.cta} disabled>
+              Agotado
+            </button>
+          )}
         </div>
       </div>
-    </Link>
+    </article>
   )
 }

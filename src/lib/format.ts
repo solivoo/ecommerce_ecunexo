@@ -16,3 +16,7 @@ export function formatPrice(value: number | null | undefined): string {
 export function formatQuantity(value: number): string {
   return quantityFormatter.format(value)
 }
+
+export function roundCurrency(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100
+}

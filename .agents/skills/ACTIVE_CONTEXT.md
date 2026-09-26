@@ -10,7 +10,7 @@
 * **Repositorio:** `github.com/solivoo/ecommerce_ecunexo` (separado de `ecunexo` y `Ecunexo_cliente`).
 * **Rama Activa:** `main` (sincronizada con `origin/main`).
 * **Última Versión Publicada:** `v1.0.0` (tag anotado; `package.json` en `1.0.0`).
-* **Verificación:** `pnpm test:run` 33/33, `pnpm build` limpio y contenedor Docker probado contra la
+* **Verificación:** `pnpm test:run` 77/77, `pnpm build` limpio y contenedor Docker probado contra la
   API real (SPA `200` y `/api/.../storefront/products` con precio resuelto).
 
 ---
@@ -40,6 +40,12 @@ Cliente → https://<dominio-del-cliente>
 
 ## 3. Hitos Recientes Completados
 
+* **Carrito y checkout invitado (Fase 2C):** carrito persistido en
+  `localStorage('ecunexo.cart.v1')` con merge y tope de 10 por ítem (`cartSlice` +
+  `CartDrawer`), botón Agregar en tarjetas y ficha con cantidad topeada por stock,
+  checkout en `/checkout` contra `checkout-options` y `POST .../orders` (el servidor
+  calcula montos), manejo de `ecommerce.order.stock_conflict` y confirmación en
+  `/pedido/confirmado` con instrucciones de pago.
 * **Vitrina multi-tenant con precios resueltos (`catalogApi`, `storefrontApi`, `storeSlice`,
   `CatalogPage`, `ProductDetailPage`) [v1.0.0]:** catálogo con filtros sincronizados a la URL
   (`buscar`, `categoria`, `orden`, `pagina`), ficha con galería, variantes y disponibilidad, y
@@ -67,7 +73,8 @@ Cliente → https://<dominio-del-cliente>
 | `API_UPSTREAM` | (runtime nginx) API al que se proxya `/api`. |
 | `STOREFRONT_PORT` | (compose) Puerto publicado; por defecto `8080`. |
 
-Rutas: `/` (catálogo), `/producto/:productId` (ficha), `*` (no encontrado).
+Rutas: `/` (catálogo), `/producto/:productId` (ficha), `/checkout` (checkout invitado),
+`/pedido/confirmado` (confirmación), `*` (no encontrado).
 
 ---
 
@@ -89,8 +96,6 @@ API_UPSTREAM=http://<api-interna>:8080 docker compose up -d --build
 
 ## 6. Pendientes
 
-* Carrito y checkout (pedidos ecommerce) contra `POST /ecommerce/orders` (ya resuelve precio
-  server-side y guarda snapshot).
 * Infraestructura Cloudflare for SaaS en producción (CNAME + TLS por dominio).
 * Theming avanzado por tenant (tipografía, radios) sobre `--store-accent`.
-* Pruebas E2E de la vitrina contra un stack real.
+* Pruebas E2E de la vitrina y el checkout contra un stack real.

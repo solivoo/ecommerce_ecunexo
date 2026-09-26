@@ -14,19 +14,27 @@ function axiosResponse(data: unknown, status: number): AxiosResponse {
 }
 
 describe('normalizeApiError', () => {
-  it('extrae el detail de ProblemDetails', () => {
+  it('extrae el detail y el código de ProblemDetails', () => {
     const error = new AxiosError(
       'Request failed',
       'ERR_BAD_RESPONSE',
       undefined,
       undefined,
-      axiosResponse({ title: 'Validación', detail: 'El tenant no existe.' }, 404),
+      axiosResponse(
+        {
+          type: 'https://api.ecunexo/errors/ecommerce.order.stock_conflict',
+          title: 'Conflicto',
+          detail: 'El producto se agotó mientras comprabas.',
+        },
+        409,
+      ),
     )
 
     expect(normalizeApiError(error)).toEqual({
-      status: 404,
-      message: 'El tenant no existe.',
-      detail: 'El tenant no existe.',
+      status: 409,
+      code: 'ecommerce.order.stock_conflict',
+      message: 'El producto se agotó mientras comprabas.',
+      detail: 'El producto se agotó mientras comprabas.',
     })
   })
 
@@ -35,10 +43,11 @@ describe('normalizeApiError', () => {
 
     expect(normalizeApiError(error).message).toContain('No se pudo conectar')
     expect(normalizeApiError(error).status).toBeNull()
+    expect(normalizeApiError(error).code).toBeNull()
   })
 
   it('conserva un ApiError ya normalizado', () => {
-    const apiError = { status: 500, message: 'boom', detail: null }
+    const apiError = { status: 500, code: null, message: 'boom', detail: null }
 
     expect(normalizeApiError(apiError)).toEqual(apiError)
   })

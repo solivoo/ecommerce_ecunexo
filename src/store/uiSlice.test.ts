@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   beginRequest,
   clearHttpMessage,
+  closeCartDrawer,
   endRequest,
+  openCartDrawer,
   setHttpMessage,
   uiReducer,
 } from './uiSlice'
@@ -10,7 +12,7 @@ import {
 describe('uiSlice', () => {
   it('inicia sin solicitudes pendientes ni mensajes', () => {
     const state = uiReducer(undefined, { type: 'init' })
-    expect(state).toEqual({ pendingHttp: 0, httpMessage: null })
+    expect(state).toEqual({ pendingHttp: 0, httpMessage: null, cartDrawerOpen: false })
   })
 
   it('cuenta solicitudes pendientes sin bajar de cero', () => {
@@ -30,5 +32,13 @@ describe('uiSlice', () => {
 
     state = uiReducer(state, clearHttpMessage())
     expect(state.httpMessage).toBeNull()
+  })
+
+  it('abre y cierra el drawer del carrito', () => {
+    let state = uiReducer(undefined, openCartDrawer())
+    expect(state.cartDrawerOpen).toBe(true)
+
+    state = uiReducer(state, closeCartDrawer())
+    expect(state.cartDrawerOpen).toBe(false)
   })
 })

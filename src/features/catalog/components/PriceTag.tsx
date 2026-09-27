@@ -25,13 +25,13 @@ export function PriceTag({
 
   return (
     <span className={`${styles.tag} ${SIZE_CLASS[size]}`.trim()}>
+      <span className={styles.price}>{formatPrice(price)}</span>
       {hasDiscount ? (
         <>
-          <span className={styles.badge}>-{percent}%</span>
           <s className={styles.original}>{formatPrice(originalPrice)}</s>
+          <span className={styles.badge}>-{percent}%</span>
         </>
       ) : null}
-      <span className={styles.price}>{formatPrice(price)}</span>
     </span>
   )
 }

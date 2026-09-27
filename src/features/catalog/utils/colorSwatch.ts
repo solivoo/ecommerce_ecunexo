@@ -12,6 +12,16 @@ const COLOR_SWATCHES: Record<string, string> = {
   marron: '#7c4a21',
   morado: '#7c3aed',
   naranja: '#f97316',
+  lila: '#8b5cf6',
+  violeta: '#7c3aed',
+  turquesa: '#14b8a6',
+  dorado: '#d4a017',
+  plateado: '#c0c0c0',
+  crema: '#f5f0e1',
+  fucsia: '#d946ef',
+  coral: '#ff7f50',
+  oliva: '#708238',
+  vino: '#722f37',
 }
 
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i

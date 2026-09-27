@@ -21,13 +21,15 @@
 
 .badge {
   align-self: center;
-  padding: 2px var(--space-2);
-  border: 1px solid var(--ink);
-  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  border-radius: 999px;
   background-color: var(--alert);
   color: var(--surface);
-  font-size: var(--text-xs);
+  font-size: 0.6875rem;
   font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .original {
@@ -35,6 +37,7 @@
   font-size: var(--text-sm);
   font-weight: 600;
   text-decoration: line-through;
+  white-space: nowrap;
 }
 
 .price {

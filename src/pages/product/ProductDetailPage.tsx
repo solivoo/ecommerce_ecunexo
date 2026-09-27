@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import type { StorefrontProductDetail } from '@/api/types'
 import { ProductGallery } from '@/features/catalog/components/ProductGallery'
 import { VariantSelector } from '@/features/catalog/components/VariantSelector'
+import { LikeButton } from '@/features/likes/LikeButton'
 import {
   findVariant,
   initialSelection,
@@ -162,6 +163,7 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
             ) : (
               <span className={styles.stockOut}>Agotado</span>
             )}
+            <LikeButton productId={product.id} likeCount={product.likeCount} />
           </div>
 
           {displaySku ? <p className={styles.sku}>SKU: {displaySku}</p> : null}

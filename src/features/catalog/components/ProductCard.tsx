@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { StorefrontProduct } from '@/api/types'
+import { LikeButton } from '@/features/likes/LikeButton'
 import { formatPrice } from '@/lib/format'
 import { addItem } from '@/store/cartSlice'
 import { useAppDispatch } from '@/store/hooks'
@@ -34,38 +35,45 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <article className={styles.card}>
-      <Link
-        to={`/producto/${product.id}`}
-        className={styles.mediaLink}
-        aria-label={product.name}
-      >
-        <div className={styles.media}>
-          {imageUrl ? (
-            <>
-              <img
-                className={styles.imagePrimary}
-                src={imageUrl}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-              {product.secondMediumUrl ? (
+      <div className={styles.mediaWrap}>
+        <Link
+          to={`/producto/${product.id}`}
+          className={styles.mediaLink}
+          aria-label={product.name}
+        >
+          <div className={styles.media}>
+            {imageUrl ? (
+              <>
                 <img
-                  className={styles.imageSecondary}
-                  src={product.secondMediumUrl}
+                  className={styles.imagePrimary}
+                  src={imageUrl}
                   alt=""
                   loading="lazy"
                   decoding="async"
                 />
-              ) : null}
-            </>
-          ) : (
-            <span className={styles.placeholder} aria-hidden="true" />
-          )}
-          {product.isNew ? <span className={styles.new}>Nuevo</span> : null}
-          {!product.inStock ? <span className={styles.soldOut}>Agotado</span> : null}
-        </div>
-      </Link>
+                {product.secondMediumUrl ? (
+                  <img
+                    className={styles.imageSecondary}
+                    src={product.secondMediumUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : null}
+              </>
+            ) : (
+              <span className={styles.placeholder} aria-hidden="true" />
+            )}
+            {product.isNew ? <span className={styles.new}>Nuevo</span> : null}
+            {!product.inStock ? <span className={styles.soldOut}>Agotado</span> : null}
+          </div>
+        </Link>
+        <LikeButton
+          productId={product.id}
+          likeCount={product.likeCount}
+          className={styles.likeOverlay}
+        />
+      </div>
       <div className={styles.body}>
         <h3 className={styles.name}>
           <Link to={`/producto/${product.id}`}>{product.name}</Link>

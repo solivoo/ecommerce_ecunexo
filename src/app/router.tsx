@@ -38,6 +38,13 @@ export const router = createBrowserRouter([
           return { Component: OrderConfirmedPage }
         },
       },
+      {
+        path: 'privacidad',
+        lazy: async () => {
+          const { PrivacyPage } = await import('@/pages/legal/PrivacyPage')
+          return { Component: PrivacyPage }
+        },
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

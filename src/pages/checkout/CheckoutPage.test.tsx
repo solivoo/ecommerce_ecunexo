@@ -115,6 +115,14 @@ async function fillRequiredFields() {
   await userEvent.type(screen.getByLabelText(/^Ciudad/), 'Quito')
 }
 
+async function acceptPrivacyConsent() {
+  await userEvent.click(
+    screen.getByRole('checkbox', {
+      name: /Acepto la política de tratamiento de datos personales/,
+    }),
+  )
+}
+
 describe('CheckoutPage', () => {
   beforeEach(() => {
     mockedGetOptions.mockResolvedValue(options)
@@ -155,11 +163,25 @@ describe('CheckoutPage', () => {
     expect(mockedCreateOrder).not.toHaveBeenCalled()
   })
 
+  it('exige aceptar la política de datos antes de enviar', async () => {
+    renderPage()
+
+    await screen.findByText('Transferencia bancaria')
+    await fillRequiredFields()
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    expect(
+      await screen.findByText('Debes aceptar la política de tratamiento de datos personales.'),
+    ).toBeInTheDocument()
+    expect(mockedCreateOrder).not.toHaveBeenCalled()
+  })
+
   it('envía el pedido, limpia el carrito y navega a la confirmación', async () => {
     const store = renderPage()
 
     await screen.findByText('Transferencia bancaria')
     await fillRequiredFields()
+    await acceptPrivacyConsent()
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     expect(await screen.findByText('Pedido confirmado')).toBeInTheDocument()
@@ -185,6 +207,7 @@ describe('CheckoutPage', () => {
           { catalogItemId: 'p2', quantity: 1 },
         ],
         notes: null,
+        acceptPrivacyPolicy: true,
       }),
     )
     expect(store.getState().cart.items).toEqual([])
@@ -210,6 +233,7 @@ describe('CheckoutPage', () => {
 
     await screen.findByText('Transferencia bancaria')
     await fillRequiredFields()
+    await acceptPrivacyConsent()
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     expect(await screen.findByText('Pedido confirmado')).toBeInTheDocument()
@@ -241,6 +265,7 @@ describe('CheckoutPage', () => {
 
     await screen.findByText('Transferencia bancaria')
     await fillRequiredFields()
+    await acceptPrivacyConsent()
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     expect(
@@ -260,6 +285,7 @@ describe('CheckoutPage', () => {
 
     await screen.findByText('Transferencia bancaria')
     await fillRequiredFields()
+    await acceptPrivacyConsent()
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     expect(

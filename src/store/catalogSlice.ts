@@ -11,7 +11,13 @@ import type { RootState } from '@/app/store'
 import { selectStorefrontTenantId } from './storefrontSlice'
 import type { RequestStatus } from './requestStatus'
 
-export type CatalogSort = 'relevance' | 'name' | 'price_asc' | 'price_desc' | 'newest'
+export type CatalogSort =
+  | 'relevance'
+  | 'name'
+  | 'price_asc'
+  | 'price_desc'
+  | 'newest'
+  | 'likes'
 
 export interface CatalogFiltersState {
   attributes: Record<string, string[]>

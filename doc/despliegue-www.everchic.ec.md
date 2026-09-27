@@ -255,7 +255,8 @@ En el navegador:
 1. Abrir `https://www.everchic.ec` → catálogo con branding de Everchic.
 2. Probar búsqueda, filtros, orden por precio, paginación.
 3. Abrir una ficha con variantes → selector, galería y precio por variante.
-4. Confirmar candado TLS válido para `www.everchic.ec`.
+4. Completar un pedido aceptando la política de tratamiento de datos y verificar el consentimiento en el detalle del admin (ver [`tratamiento-datos-checkout.md`](./tratamiento-datos-checkout.md)).
+5. Confirmar candado TLS válido para `www.everchic.ec`.
 
 ---
 

@@ -146,6 +146,7 @@ export function CatalogFilters({
           <option value="price_asc">Precio: menor a mayor</option>
           <option value="price_desc">Precio: mayor a menor</option>
           <option value="newest">Más recientes</option>
+          <option value="likes">Más gustados</option>
         </select>
       </section>
 

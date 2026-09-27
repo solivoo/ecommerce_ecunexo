@@ -1,6 +1,12 @@
 export type CatalogItemKind = 'physical' | 'service'
 
-export type CatalogSort = 'relevance' | 'name' | 'price_asc' | 'price_desc' | 'newest'
+export type CatalogSort =
+  | 'relevance'
+  | 'name'
+  | 'price_asc'
+  | 'price_desc'
+  | 'newest'
+  | 'likes'
 
 export const STOREFRONT_FACET_KEYS = [
   'talla',
@@ -75,6 +81,7 @@ export interface StorefrontProduct {
   hasVariants: boolean
   variantCount: number
   isNew: boolean
+  likeCount: number
   createdAt: string
 }
 
@@ -143,6 +150,7 @@ export interface StorefrontProductDetail {
   variants: StorefrontVariant[]
   matrix: StorefrontMatrix | null
   attributes: StorefrontAttribute[]
+  likeCount: number
   createdAt: string
   updatedAt: string | null
 }
@@ -207,6 +215,8 @@ export interface CreateStorefrontOrderInput {
   formElapsedMs?: number | null
   /** Token de Cloudflare Turnstile cuando el captcha está habilitado. */
   turnstileToken?: string | null
+  /** El comprador aceptó la política de tratamiento de datos personales. */
+  acceptPrivacyPolicy: boolean
 }
 
 export interface StorefrontOrderResult {
@@ -227,4 +237,9 @@ export interface PaymentProofUploadResult {
   uploadedAtUtc: string
   fileName: string
   contentType: string
+}
+
+export interface ProductLikeResult {
+  liked: boolean
+  likeCount: number
 }

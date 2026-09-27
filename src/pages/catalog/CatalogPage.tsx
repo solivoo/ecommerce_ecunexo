@@ -28,7 +28,14 @@ import { selectStorefrontName } from '@/store/storefrontSlice'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import styles from './CatalogPage.module.css'
 
-const SORT_VALUES: CatalogSort[] = ['relevance', 'name', 'price_asc', 'price_desc', 'newest']
+const SORT_VALUES: CatalogSort[] = [
+  'relevance',
+  'name',
+  'price_asc',
+  'price_desc',
+  'newest',
+  'likes',
+]
 const FILTERS_ID = 'catalog-filters'
 
 function isCatalogSort(value: string | null): value is CatalogSort {
@@ -140,7 +147,11 @@ export function CatalogPage() {
 
   const updateQuery = useCallback(
     (patch: Partial<CatalogQueryState>) => {
-      setSearchParams(buildSearchParams({ ...query, ...patch, page: patch.page ?? 1 }))
+      const next: CatalogQueryState = { ...query, ...patch, page: patch.page ?? 1 }
+      if ('filters' in patch) {
+        next.search = ''
+      }
+      setSearchParams(buildSearchParams(next))
     },
     [query, setSearchParams],
   )

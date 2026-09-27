@@ -46,6 +46,7 @@ describe('checkoutApi', () => {
       shippingMethod: 'Courier',
       items: [{ catalogItemId: 'p1', quantity: 2 }],
       notes: null,
+      acceptPrivacyPolicy: true,
     }
 
     const result: StorefrontOrderResult = {

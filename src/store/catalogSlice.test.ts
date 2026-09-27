@@ -24,6 +24,7 @@ const product: StorefrontProduct = {
   hasVariants: false,
   variantCount: 0,
   isNew: false,
+  likeCount: 0,
   createdAt: '2026-01-01T00:00:00Z',
 }
 

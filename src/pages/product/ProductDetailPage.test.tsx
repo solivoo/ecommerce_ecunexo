@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { StorefrontProductDetail, StorefrontVariant } from '@/api/types'
 import { cartReducer } from '@/store/cartSlice'
 import { productReducer } from '@/store/productSlice'
@@ -15,11 +15,14 @@ vi.mock('@/api/catalogApi', () => ({
   listStorefrontProducts: vi.fn(),
   listStorefrontCategories: vi.fn(),
   getStorefrontProduct: vi.fn(),
+  likeProduct: vi.fn(),
+  unlikeProduct: vi.fn(),
 }))
 
-import { getStorefrontProduct } from '@/api/catalogApi'
+import { getStorefrontProduct, likeProduct } from '@/api/catalogApi'
 
 const mockedGetProduct = vi.mocked(getStorefrontProduct)
+const mockedLike = vi.mocked(likeProduct)
 
 function buildVariant(
   id: string,
@@ -90,6 +93,7 @@ const detail: StorefrontProductDetail = {
     groupValues: [],
   },
   attributes: [{ level: 'Modelo', name: 'Marca', value: 'Nike' }],
+  likeCount: 4,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: null,
 }
@@ -132,6 +136,11 @@ function renderPage() {
 }
 
 describe('ProductDetailPage', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.clearAllMocks()
+  })
+
   it('muestra ficha, variante por defecto y especificaciones', async () => {
     mockedGetProduct.mockResolvedValue(detail)
 
@@ -238,5 +247,21 @@ describe('ProductDetailPage', () => {
     await userEvent.click(screen.getByRole('button', { name: '42-44' }))
 
     expect(screen.getByRole('button', { name: 'Agregar al carrito' })).toBeDisabled()
+  })
+
+  it('muestra el contador de likes y alterna con optimismo', async () => {
+    mockedGetProduct.mockResolvedValue(detail)
+    mockedLike.mockResolvedValue({ liked: true, likeCount: 5 })
+
+    renderPage()
+
+    await screen.findByRole('heading', { name: 'Calcetín Runner' })
+    const heart = screen.getByRole('button', { name: 'Me gusta' })
+    expect(heart).toHaveTextContent('4')
+
+    await userEvent.click(heart)
+
+    expect(await screen.findByRole('button', { name: 'Quitar me gusta' })).toHaveTextContent('5')
+    expect(mockedLike).toHaveBeenCalledWith('tenant-1', 'p1', expect.any(String))
   })
 })

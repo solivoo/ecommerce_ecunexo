@@ -97,6 +97,8 @@ export function CheckoutPage() {
   const [shippingChoice, setShippingChoice] = useState('')
   const [saving, setSaving] = useState(false)
   const [placed, setPlaced] = useState(false)
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
+  const [privacyError, setPrivacyError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [stockConflict, setStockConflict] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
@@ -177,6 +179,11 @@ export function CheckoutPage() {
       return
     }
 
+    if (!privacyAccepted) {
+      setPrivacyError('Debes aceptar la política de tratamiento de datos personales.')
+      return
+    }
+
     requestIdRef.current ??= createId()
 
     const input: CreateStorefrontOrderInput = {
@@ -202,6 +209,7 @@ export function CheckoutPage() {
       contactFax: contactFax.trim() ? contactFax : null,
       formElapsedMs: elapsedMsSince(startedAtRef.current),
       turnstileToken: turnstileToken ?? null,
+      acceptPrivacyPolicy: true,
     }
 
     setSaving(true)
@@ -475,6 +483,32 @@ export function CheckoutPage() {
                 />
               </div>
             ) : null}
+
+            <div className={styles.consent}>
+              <label className={styles.consentLabel}>
+                <input
+                  type="checkbox"
+                  checked={privacyAccepted}
+                  aria-invalid={privacyError ? true : undefined}
+                  aria-describedby={privacyError ? 'checkout-privacy-error' : undefined}
+                  onChange={(event) => {
+                    setPrivacyAccepted(event.target.checked)
+                    if (event.target.checked) setPrivacyError(null)
+                  }}
+                />
+                <span>
+                  Acepto la{' '}
+                  <Link to="/privacidad" target="_blank" rel="noreferrer">
+                    política de tratamiento de datos personales
+                  </Link>
+                </span>
+              </label>
+              {privacyError ? (
+                <p id="checkout-privacy-error" className={styles.fieldError} role="alert">
+                  {privacyError}
+                </p>
+              ) : null}
+            </div>
 
             <button
               type="submit"

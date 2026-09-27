@@ -13,6 +13,8 @@ import { CatalogPage } from './CatalogPage'
 vi.mock('@/api/catalogApi', () => ({
   listStorefrontProducts: vi.fn(),
   listStorefrontFacets: vi.fn(),
+  likeProduct: vi.fn(),
+  unlikeProduct: vi.fn(),
 }))
 
 import { listStorefrontFacets, listStorefrontProducts } from '@/api/catalogApi'
@@ -34,6 +36,7 @@ const product: StorefrontProduct = {
   hasVariants: false,
   variantCount: 0,
   isNew: false,
+  likeCount: 0,
   createdAt: '2026-01-01T00:00:00Z',
 }
 
@@ -141,6 +144,25 @@ describe('CatalogPage', () => {
     })
     await waitFor(() => {
       expect(mockedProducts.mock.calls.at(-1)?.[1]).toMatchObject({ talla: ['M'] })
+    })
+  })
+
+  it('al marcar una faceta limpia el buscador y la URL', async () => {
+    mockedProducts.mockResolvedValue({ items: [product], totalCount: 1, page: 1, pageSize: 24 })
+    mockedFacets.mockResolvedValue(facets)
+
+    renderPage(['/?buscar=calcetin'])
+
+    await userEvent.click(await screen.findByRole('checkbox', { name: /M\s*3/ }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).not.toHaveTextContent('buscar=')
+    })
+    await waitFor(() => {
+      expect(mockedProducts.mock.calls.at(-1)?.[1]).toMatchObject({
+        search: '',
+        talla: ['M'],
+      })
     })
   })
 

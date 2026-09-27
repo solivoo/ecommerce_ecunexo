@@ -3,6 +3,7 @@ import { STOREFRONT_FACET_KEYS } from './types'
 import type {
   CatalogItemKind,
   CatalogQuery,
+  ProductLikeResult,
   RawStorefrontProduct,
   RawStorefrontProductDetail,
   StorefrontFacets,
@@ -82,4 +83,28 @@ export async function getStorefrontProduct(
   )
 
   return { ...response.data, kind: mapKind(response.data.kind) }
+}
+
+export async function likeProduct(
+  tenantId: string,
+  productId: string,
+  visitorId: string,
+): Promise<ProductLikeResult> {
+  const response = await api.post<ProductLikeResult>(
+    storefrontUrl(tenantId, `/products/${productId}/like`),
+    { visitorId },
+  )
+  return response.data
+}
+
+export async function unlikeProduct(
+  tenantId: string,
+  productId: string,
+  visitorId: string,
+): Promise<ProductLikeResult> {
+  const response = await api.delete<ProductLikeResult>(
+    storefrontUrl(tenantId, `/products/${productId}/like`),
+    { params: { visitorId } },
+  )
+  return response.data
 }

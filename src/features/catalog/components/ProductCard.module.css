@@ -15,8 +15,20 @@
   transform: translate(-2px, -2px);
 }
 
+.mediaWrap {
+  position: relative;
+}
+
 .mediaLink {
   display: block;
+}
+
+.likeOverlay {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+  z-index: 1;
+  background-color: var(--surface);
 }
 
 .media {
@@ -74,8 +86,8 @@
 
 .soldOut {
   position: absolute;
-  inset-block-start: var(--space-2);
-  inset-inline-end: var(--space-2);
+  inset-block-end: var(--space-2);
+  inset-inline-start: var(--space-2);
   padding: 2px var(--space-2);
   border: 1px solid var(--ink);
   border-radius: var(--radius-sm);

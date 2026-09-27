@@ -1,8 +1,8 @@
 import type { StorefrontMatrixAxis, StorefrontVariant } from '@/api/types'
 import { cx } from '@/lib/cx'
+import { resolveColorHex } from '../utils/colorSwatch'
 import {
   availableAxisValues,
-  isHexColor,
   type VariantSelection,
 } from '../utils/variantSelection'
 import styles from './VariantSelector.module.css'
@@ -34,7 +34,7 @@ export function VariantSelector({ axes, variants, selection, onChange }: Variant
                 const selected = selection[axis.name] === value
 
                 if (isColor) {
-                  const hex = isHexColor(value)
+                  const hex = resolveColorHex(value)
                   return (
                     <button
                       key={value}
@@ -43,7 +43,7 @@ export function VariantSelector({ axes, variants, selection, onChange }: Variant
                       aria-label={`${axis.name}: ${value}`}
                       aria-pressed={selected}
                       className={cx(styles.swatch, selected && styles.swatchActive)}
-                      style={hex ? { backgroundColor: value } : undefined}
+                      style={hex ? { backgroundColor: hex } : undefined}
                       onClick={() => onChange(axis.name, value)}
                     >
                       {hex ? null : value}

@@ -14,6 +14,8 @@ const COLOR_SWATCHES: Record<string, string> = {
   naranja: '#f97316',
 }
 
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i
+
 function normalizeColorName(value: string): string {
   return value
     .trim()
@@ -22,6 +24,17 @@ function normalizeColorName(value: string): string {
     .replace(/[\u0300-\u036f]/g, '')
 }
 
+/** Resuelve un color a hex: acepta nombres conocidos y valores hex directos. */
 export function resolveColorHex(value: string): string | null {
-  return COLOR_SWATCHES[normalizeColorName(value)] ?? null
+  const trimmed = value.trim()
+  if (HEX_COLOR_PATTERN.test(trimmed)) {
+    return trimmed
+  }
+
+  return COLOR_SWATCHES[normalizeColorName(trimmed)] ?? null
+}
+
+/** True cuando el valor es un código hex (no debe mostrarse como texto). */
+export function isHexColorValue(value: string): boolean {
+  return HEX_COLOR_PATTERN.test(value.trim())
 }

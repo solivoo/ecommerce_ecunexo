@@ -9,7 +9,7 @@ import type {
   CatalogSort,
 } from '@/store/catalogSlice'
 import type { RequestStatus } from '@/store/requestStatus'
-import { resolveColorHex } from '../utils/colorSwatch'
+import { isHexColorValue, resolveColorHex } from '../utils/colorSwatch'
 import styles from './CatalogFilters.module.css'
 
 interface CatalogFiltersProps {
@@ -47,6 +47,8 @@ function FacetGroup({ attribute, selected, onToggle }: FacetGroupProps) {
       <div className={styles.list}>
         {values.map((facetValue) => {
           const checked = selected.includes(facetValue.value)
+          const hex = isColor ? resolveColorHex(facetValue.label) : null
+          const hideLabel = isColor && isHexColorValue(facetValue.label)
           return (
             <label
               key={facetValue.value}
@@ -58,7 +60,7 @@ function FacetGroup({ attribute, selected, onToggle }: FacetGroupProps) {
                 checked={checked}
                 onChange={() => onToggle(facetValue.value)}
               />
-              {isColor ? (
+              {hex ? (
                 <span
                   className={styles.swatch}
                   style={swatchStyle(facetValue.label)}
@@ -66,7 +68,11 @@ function FacetGroup({ attribute, selected, onToggle }: FacetGroupProps) {
                   aria-hidden="true"
                 />
               ) : null}
-              <span className={styles.optionLabel}>{facetValue.label}</span>
+              {hideLabel ? (
+                <span className="visually-hidden">{facetValue.label}</span>
+              ) : (
+                <span className={styles.optionLabel}>{facetValue.label}</span>
+              )}
               <span className={styles.optionCount}>{facetValue.count}</span>
             </label>
           )

@@ -53,6 +53,46 @@ function elapsedMsSince(start: number): number {
   return start > 0 ? Date.now() - start : 0
 }
 
+const CHECKOUT_REQUEST_KEY = 'ecunexo.checkout.request.v1'
+
+function cartSignature(items: readonly { catalogItemId: string; quantity: number }[]): string {
+  return items
+    .map((item) => `${item.catalogItemId}x${item.quantity}`)
+    .sort()
+    .join('|')
+}
+
+/**
+ * Reutiliza el requestId del carrito actual (idempotencia): un refresco o reintento
+ * tras un fallo de red devuelve el mismo pedido en lugar de crear otro.
+ */
+function resolveRequestId(signature: string): string {
+  try {
+    const raw = sessionStorage.getItem(CHECKOUT_REQUEST_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as { signature?: string; requestId?: string }
+      if (parsed.signature === signature && parsed.requestId) {
+        return parsed.requestId
+      }
+    }
+  } catch { /* ignore */ }
+
+  const requestId = createId()
+  try {
+    sessionStorage.setItem(
+      CHECKOUT_REQUEST_KEY,
+      JSON.stringify({ signature, requestId }),
+    )
+  } catch { /* ignore */ }
+  return requestId
+}
+
+function clearStoredRequestId(): void {
+  try {
+    sessionStorage.removeItem(CHECKOUT_REQUEST_KEY)
+  } catch { /* ignore */ }
+}
+
 function validateForm(form: CheckoutFormState): CheckoutFormErrors {
   const errors: CheckoutFormErrors = {}
 
@@ -163,6 +203,8 @@ export function CheckoutPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (saving) return
+
     setSubmitError(null)
     setStockConflict(false)
 
@@ -184,7 +226,11 @@ export function CheckoutPage() {
       return
     }
 
-    requestIdRef.current ??= createId()
+    const orderItems = items.map((item) => ({
+      catalogItemId: item.catalogItemId,
+      quantity: item.quantity,
+    }))
+    requestIdRef.current = resolveRequestId(cartSignature(orderItems))
 
     const input: CreateStorefrontOrderInput = {
       requestId: requestIdRef.current,
@@ -201,10 +247,7 @@ export function CheckoutPage() {
       },
       paymentMethod,
       shippingMethod,
-      items: items.map((item) => ({
-        catalogItemId: item.catalogItemId,
-        quantity: item.quantity,
-      })),
+      items: orderItems,
       notes: form.notes.trim() ? form.notes.trim() : null,
       contactFax: contactFax.trim() ? contactFax : null,
       formElapsedMs: elapsedMsSince(startedAtRef.current),
@@ -215,6 +258,7 @@ export function CheckoutPage() {
     setSaving(true)
     try {
       const result: StorefrontOrderResult = await createStorefrontOrder(tenantId, input)
+      clearStoredRequestId()
       setPlaced(true)
       navigate('/pedido/confirmado', {
         state: {
@@ -519,6 +563,16 @@ export function CheckoutPage() {
             </button>
           </aside>
         </form>
+      ) : null}
+
+      {saving ? (
+        <div className={styles.overlay} role="alert" aria-live="assertive">
+          <div className={styles.overlayCard}>
+            <span className={styles.spinner} aria-hidden="true" />
+            <p className={styles.overlayTitle}>Procesando tu pedido…</p>
+            <p className={styles.overlayHint}>No cierres ni recargues esta página.</p>
+          </div>
+        </div>
       ) : null}
     </div>
   )

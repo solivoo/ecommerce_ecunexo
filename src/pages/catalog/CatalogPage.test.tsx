@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { MemoryRouter, useLocation } from 'react-router-dom'
@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { StorefrontFacets, StorefrontProduct } from '@/api/types'
 import { catalogReducer } from '@/store/catalogSlice'
 import { storefrontReducer } from '@/store/storefrontSlice'
-import { uiReducer } from '@/store/uiSlice'
+import { toggleFilterDrawer, uiReducer } from '@/store/uiSlice'
 import { CatalogPage } from './CatalogPage'
 
 vi.mock('@/api/catalogApi', () => ({
@@ -182,21 +182,24 @@ describe('CatalogPage', () => {
     })
   })
 
-  it('abre y cierra el panel de filtros con el botón Filtrar', async () => {
+  it('abre el panel de filtros desde el header y lo cierra con Escape', async () => {
     mockedProducts.mockResolvedValue({ items: [product], totalCount: 1, page: 1, pageSize: 24 })
     mockedFacets.mockResolvedValue(facets)
 
-    renderPage()
+    const store = renderPage()
+    act(() => {
+      store.dispatch(toggleFilterDrawer())
+    })
 
-    const filterButton = await screen.findByRole('button', { name: 'Filtrar' })
-    expect(filterButton).toHaveAttribute('aria-expanded', 'false')
+    expect(await screen.findByRole('button', { name: 'Cerrar filtros' })).toBeInTheDocument()
 
-    await userEvent.click(filterButton)
-    expect(filterButton).toHaveAttribute('aria-expanded', 'true')
-    expect(filterButton).toHaveAttribute('aria-controls', 'catalog-filters')
+    act(() => {
+      fireEvent.keyDown(window, { key: 'Escape' })
+    })
 
-    await userEvent.keyboard('{Escape}')
-    expect(filterButton).toHaveAttribute('aria-expanded', 'false')
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Cerrar filtros' })).not.toBeInTheDocument()
+    })
   })
 
   it('muestra el estado de error con opción de reintentar', async () => {

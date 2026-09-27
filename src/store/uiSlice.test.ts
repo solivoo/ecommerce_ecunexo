@@ -12,7 +12,12 @@ import {
 describe('uiSlice', () => {
   it('inicia sin solicitudes pendientes ni mensajes', () => {
     const state = uiReducer(undefined, { type: 'init' })
-    expect(state).toEqual({ pendingHttp: 0, httpMessage: null, cartDrawerOpen: false })
+    expect(state).toEqual({
+      pendingHttp: 0,
+      httpMessage: null,
+      cartDrawerOpen: false,
+      filterDrawerOpen: false,
+    })
   })
 
   it('cuenta solicitudes pendientes sin bajar de cero', () => {

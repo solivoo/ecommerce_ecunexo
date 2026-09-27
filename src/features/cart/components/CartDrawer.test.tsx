@@ -33,7 +33,7 @@ function renderDrawer() {
     reducer: { cart: cartReducer, ui: uiReducer },
     preloadedState: {
       cart: { items, tenantId: 'tenant-1' },
-      ui: { pendingHttp: 0, httpMessage: null, cartDrawerOpen: true },
+      ui: { pendingHttp: 0, httpMessage: null, cartDrawerOpen: true, filterDrawerOpen: false },
     },
   })
 

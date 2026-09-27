@@ -5,12 +5,14 @@ export interface UiState {
   pendingHttp: number
   httpMessage: string | null
   cartDrawerOpen: boolean
+  filterDrawerOpen: boolean
 }
 
 const initialState: UiState = {
   pendingHttp: 0,
   httpMessage: null,
   cartDrawerOpen: false,
+  filterDrawerOpen: false,
 }
 
 const uiSlice = createSlice({
@@ -35,6 +37,12 @@ const uiSlice = createSlice({
     closeCartDrawer(state) {
       state.cartDrawerOpen = false
     },
+    toggleFilterDrawer(state) {
+      state.filterDrawerOpen = !state.filterDrawerOpen
+    },
+    closeFilterDrawer(state) {
+      state.filterDrawerOpen = false
+    },
   },
 })
 
@@ -45,6 +53,8 @@ export const {
   clearHttpMessage,
   openCartDrawer,
   closeCartDrawer,
+  toggleFilterDrawer,
+  closeFilterDrawer,
 } = uiSlice.actions
 
 export const uiReducer = uiSlice.reducer
@@ -59,4 +69,8 @@ export function selectHttpMessage(state: { ui: UiState }): string | null {
 
 export function selectCartDrawerOpen(state: { ui: UiState }): boolean {
   return state.ui.cartDrawerOpen
+}
+
+export function selectFilterDrawerOpen(state: { ui: UiState }): boolean {
+  return state.ui.filterDrawerOpen
 }

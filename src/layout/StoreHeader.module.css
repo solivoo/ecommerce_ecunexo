@@ -122,3 +122,40 @@
     align-self: center;
   }
 }
+
+.headerEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  justify-self: end;
+}
+
+.filter {
+  display: none;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: var(--border-w) solid var(--ink);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.filter:hover {
+  background-color: var(--signal);
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.filter .badge {
+  position: absolute;
+  top: -0.55rem;
+  right: -0.55rem;
+}
+
+@media (max-width: 640px) {
+  .filter {
+    display: inline-flex;
+  }
+}

@@ -25,6 +25,7 @@ import type {
 } from '@/store/catalogSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectStorefrontName } from '@/store/storefrontSlice'
+import { closeFilterDrawer, selectFilterDrawerOpen } from '@/store/uiSlice'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import styles from './CatalogPage.module.css'
 
@@ -99,7 +100,7 @@ function priceChipLabel(priceMin: string, priceMax: string): string {
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [reloadKey, setReloadKey] = useState(0)
-  const [filtersOpen, setFiltersOpen] = useState(false)
+  const filtersOpen = useAppSelector(selectFilterDrawerOpen)
   const dispatch = useAppDispatch()
 
   const query = useMemo(() => parseCatalogQuery(searchParams), [searchParams])
@@ -133,7 +134,7 @@ export function CatalogPage() {
   useEffect(() => {
     if (!filtersOpen) return
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setFiltersOpen(false)
+      if (event.key === 'Escape') dispatch(closeFilterDrawer())
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
@@ -262,7 +263,7 @@ export function CatalogPage() {
           type="button"
           className={styles.backdrop}
           aria-label="Cerrar filtros"
-          onClick={() => setFiltersOpen(false)}
+          onClick={() => dispatch(closeFilterDrawer())}
         />
       ) : null}
 
@@ -278,7 +279,7 @@ export function CatalogPage() {
               <button
                 type="button"
                 className={styles.railClose}
-                onClick={() => setFiltersOpen(false)}
+                onClick={() => dispatch(closeFilterDrawer())}
               >
                 Cerrar
               </button>
@@ -293,18 +294,6 @@ export function CatalogPage() {
         </aside>
 
         <section className={styles.results} aria-live="polite" aria-busy={isLoading}>
-          <div className={styles.toolbar}>
-            <button
-              type="button"
-              className={styles.filterButton}
-              aria-expanded={filtersOpen}
-              aria-controls={FILTERS_ID}
-              onClick={() => setFiltersOpen((open) => !open)}
-            >
-              Filtrar{activeChips.length > 0 ? ` (${activeChips.length})` : ''}
-            </button>
-          </div>
-
           {status === 'failed' ? (
             <div className={styles.state}>
               <h2 className={styles.stateTitle}>No se pudo cargar el catálogo</h2>

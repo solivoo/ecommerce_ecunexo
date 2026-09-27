@@ -1,10 +1,13 @@
 # Storefront público multi-tenant (una SPA para todos los dominios).
 #
 # Local (API en el host):
+#   docker network create nginx-proxy-manager_default   # solo la primera vez
 #   API_UPSTREAM=http://host.docker.internal:5088 docker compose up -d --build
 #
 # Producción: apunta API_UPSTREAM al API de EcuNexo del entorno
 #   (ej. http://api:8080 si comparte red con el stack del cliente).
+# El contenedor se une automáticamente a la red de Nginx Proxy Manager
+# (nginx-proxy-manager_default) para que NPM lo resuelva por nombre tras cada redeploy.
 name: ecunexo-storefront
 
 services:
@@ -31,3 +34,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - default
+      - npm_network
+
+networks:
+  default:
+  # Red del Nginx Proxy Manager del VPS; debe existir (external).
+  npm_network:
+    external: true
+    name: nginx-proxy-manager_default

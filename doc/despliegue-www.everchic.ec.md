@@ -168,15 +168,19 @@ curl -s "http://localhost:8089/api/v1/public/storefront/resolve?host=www.everchi
 
 ### 4.3 Nginx Proxy Manager
 
-NPM y el storefront deben compartir una red Docker:
+El `docker-compose.yml` declara la red de NPM como externa (`npm_network` →
+`nginx-proxy-manager_default`), así que el contenedor **se une solo en cada redeploy**; ya no
+hace falta `docker network connect`.
+
+Si el stack no se despliega con este compose (o la red no existe), créala/conéctala a mano:
 
 ```bash
 docker network connect nginx-proxy-manager_default ecommerce_everchic-storefront-1
 ```
 
-> La conexión se pierde cada vez que se recrea el contenedor (redeploy del stack): vuelve a
-> ejecutar el `docker network connect` después de cada despliegue. Alternativa sin red
-> compartida: Forward Hostname = IP gateway de NPM (`172.20.0.1`), Forward Port = `8089`.
+> Alternativa sin red compartida: Forward Hostname = IP gateway de NPM (`172.20.0.1`),
+> Forward Port = `8089`.
+> Para desarrollo local, crea la red una vez con `docker network create nginx-proxy-manager_default`.
 
 Proxy Host (UI en `http://<IP_VPS_FRONT>:81`):
 
@@ -263,8 +267,7 @@ En el navegador:
 | Catálogo vacío | Productos sin stock/público o tenant sin catálogo activo | Revisar ítems activos y filtros |
 | Precio “Consultar” | Sin precio vigente en la lista predeterminada | Cargar precio o corregir vigencia |
 | Pedido rechazado `ecommerce.order.price_not_configured` | Producto sin lista/precio | Cargar precio antes de vender |
-| **502 Bad Gateway (openresty)** | NPM no alcanza el upstream (red/puerto) | `docker network connect nginx-proxy-manager_default ecommerce_everchic-storefront-1`; verificar Forward Port `80` |
-| El sitio funciona y tras un redeploy da 502 | El contenedor recreado perdió la red de NPM | Repetir el `docker network connect` (o usar `172.20.0.1:8089`) |
+| **502 Bad Gateway (openresty)** | NPM no alcanza el upstream (red/puerto) | Verificar Forward Port `80` y que el stack use el compose con `npm_network`; alternativa `172.20.0.1:8089` |
 | **TLS `unrecognized name`** | Proxy Host inexistente o sin certificado para el dominio | Crear/editar el Proxy Host y emitir Let's Encrypt |
 | 502 en `/api` | `API_UPSTREAM` incorrecto o Tailscale caído | `tailscale status` y probar `curl http://100.83.245.45:5088/api/v1/public/storefront/resolve?host=www.everchic.ec` |
 | TLS inválido | DNS con nube naranja o cert pendiente | Nube gris mientras se emite el cert; después Origin Certificate + Full (strict) |
@@ -290,6 +293,6 @@ En el navegador:
 | VPS API (Tailscale) | `100.83.245.45` |
 | Puerto público del storefront en el VPS | `8089` (interno `80`) |
 | Stack / contenedor | `ecommerce_everchic` / `ecommerce_everchic-storefront-1` |
-| Red compartida con NPM | `nginx-proxy-manager_default` (gateway `172.20.0.1`) |
+| Red compartida con NPM | `nginx-proxy-manager_default` (gateway `172.20.0.1`), declarada como externa en el compose |
 | UI de NPM | `http://172.245.185.86:81` |
 | Tenant Everchic (producción) | `01a082f0-b204-7aae-b7d5-ede5dd9a477a` |

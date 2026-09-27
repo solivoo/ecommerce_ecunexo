@@ -126,6 +126,8 @@ describe('ProductCard', () => {
         name: 'Calcetín Runner',
         sku: null,
         price: 3.5,
+        originalPrice: null,
+        discountPercent: null,
         quantity: 1,
         thumbUrl: null,
       },

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { createStorefrontOrder, getCheckoutOptions } from '@/api/checkoutApi'
 import { normalizeApiError } from '@/api/errors'
+import { PriceTag } from '@/features/catalog/components/PriceTag'
 import type {
   CheckoutOptions,
   CreateStorefrontOrderInput,
@@ -465,9 +466,14 @@ export function CheckoutPage() {
                   <span className={styles.summaryItemName}>
                     {item.name} × {item.quantity}
                   </span>
-                  <span className={styles.summaryItemPrice}>
-                    {formatPrice(item.price * item.quantity)}
-                  </span>
+                  <PriceTag
+                    size="sm"
+                    price={item.price * item.quantity}
+                    originalPrice={
+                      item.originalPrice ? item.originalPrice * item.quantity : null
+                    }
+                    discountPercent={item.discountPercent}
+                  />
                 </li>
               ))}
             </ul>

@@ -231,6 +231,8 @@ describe('ProductDetailPage', () => {
         name: 'Calcetín Runner',
         sku: 'CALC-NEG-39',
         price: 3.5,
+        originalPrice: null,
+        discountPercent: null,
         quantity: 2,
         thumbUrl: 'https://cdn/negro-thumb',
       },

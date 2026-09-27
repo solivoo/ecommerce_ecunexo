@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import type { StorefrontProduct } from '@/api/types'
 import { LikeButton } from '@/features/likes/LikeButton'
-import { formatPrice } from '@/lib/format'
 import { addItem } from '@/store/cartSlice'
 import { useAppDispatch } from '@/store/hooks'
 import { resolveColorHex } from '../utils/colorSwatch'
+import { PriceTag } from './PriceTag'
 import styles from './ProductCard.module.css'
 
 interface ProductCardProps {
@@ -27,6 +27,8 @@ export function ProductCard({ product }: ProductCardProps) {
         name: product.name,
         sku: null,
         price: product.price,
+        originalPrice: product.originalPrice ?? null,
+        discountPercent: product.discountPercent ?? null,
         quantity: 1,
         thumbUrl: product.thumbUrl,
       }),
@@ -98,7 +100,11 @@ export function ProductCard({ product }: ProductCardProps) {
           </ul>
         ) : null}
         <div className={styles.footer}>
-          <p className={styles.price}>{formatPrice(product.price)}</p>
+          <PriceTag
+            price={product.price}
+            originalPrice={product.originalPrice}
+            discountPercent={product.discountPercent}
+          />
           {product.hasVariants ? (
             <Link to={`/producto/${product.id}`} className={styles.ctaSecondary}>
               Elegir opciones

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type { StorefrontProductDetail } from '@/api/types'
+import { PriceTag } from '@/features/catalog/components/PriceTag'
 import { ProductGallery } from '@/features/catalog/components/ProductGallery'
 import { VariantSelector } from '@/features/catalog/components/VariantSelector'
 import { LikeButton } from '@/features/likes/LikeButton'
@@ -10,7 +11,7 @@ import {
   isHexColor,
   type VariantSelection,
 } from '@/features/catalog/utils/variantSelection'
-import { formatPrice, formatQuantity } from '@/lib/format'
+import { formatQuantity } from '@/lib/format'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import { CART_MAX_QUANTITY, addItem } from '@/store/cartSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -108,6 +109,12 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
     ? selectedVariant.availableQuantity
     : product.availableQuantity
   const price = selectedVariant?.price ?? product.price
+  const originalPrice = selectedVariant
+    ? selectedVariant.originalPrice ?? null
+    : product.originalPrice ?? null
+  const discountPercent = selectedVariant
+    ? selectedVariant.discountPercent ?? null
+    : product.discountPercent ?? null
   const displaySku = selectedVariant?.sku ?? product.sku
   const maxQuantity = Math.min(
     CART_MAX_QUANTITY,
@@ -153,7 +160,12 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
           <h1 className={styles.title}>{product.name}</h1>
 
           <div className={styles.priceRow}>
-            <p className={styles.price}>{formatPrice(price)}</p>
+            <PriceTag
+              size="lg"
+              price={price}
+              originalPrice={originalPrice}
+              discountPercent={discountPercent}
+            />
             {isAvailable ? (
               <span className={styles.stockOk}>
                 {quantityAvailable > 0
@@ -199,6 +211,8 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
             productName={product.name}
             sku={displaySku}
             price={price}
+            originalPrice={originalPrice}
+            discountPercent={discountPercent}
             thumbUrl={
               selectedVariant?.mainImageThumbUrl ?? product.images[0]?.thumbUrl ?? null
             }
@@ -240,6 +254,8 @@ interface AddToCartPanelProps {
   productName: string
   sku: string | null
   price: number | null
+  originalPrice: number | null
+  discountPercent: number | null
   thumbUrl: string | null
   isAvailable: boolean
   maxQuantity: number
@@ -251,6 +267,8 @@ function AddToCartPanel({
   productName,
   sku,
   price,
+  originalPrice,
+  discountPercent,
   thumbUrl,
   isAvailable,
   maxQuantity,
@@ -279,6 +297,8 @@ function AddToCartPanel({
         name: productName,
         sku,
         price,
+        originalPrice,
+        discountPercent,
         quantity,
         thumbUrl,
       }),

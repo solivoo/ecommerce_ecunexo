@@ -11,6 +11,8 @@ export interface CartItem {
   name: string
   sku: string | null
   price: number
+  originalPrice?: number | null
+  discountPercent?: number | null
   quantity: number
   thumbUrl: string | null
 }
@@ -40,11 +42,29 @@ function sanitizeItem(value: unknown): CartItem | null {
   if (typeof name !== 'string' || !name.trim()) return null
   if (typeof price !== 'number' || !Number.isFinite(price) || price < 0) return null
 
+  const roundedPrice = roundCurrency(price)
+  const originalPrice =
+    typeof candidate.originalPrice === 'number' &&
+    Number.isFinite(candidate.originalPrice) &&
+    candidate.originalPrice > roundedPrice
+      ? roundCurrency(candidate.originalPrice)
+      : null
+  const discountPercent =
+    originalPrice === null
+      ? null
+      : typeof candidate.discountPercent === 'number' &&
+          Number.isFinite(candidate.discountPercent) &&
+          candidate.discountPercent > 0
+        ? Math.round(candidate.discountPercent)
+        : Math.round((1 - roundedPrice / originalPrice) * 100)
+
   return {
     catalogItemId,
     name,
     sku: typeof sku === 'string' && sku.trim() ? sku : null,
-    price: roundCurrency(price),
+    price: roundedPrice,
+    originalPrice,
+    discountPercent: discountPercent !== null && discountPercent > 0 ? discountPercent : null,
     quantity: clampQuantity(typeof quantity === 'number' ? quantity : 1),
     thumbUrl: typeof thumbUrl === 'string' && thumbUrl.trim() ? thumbUrl : null,
   }

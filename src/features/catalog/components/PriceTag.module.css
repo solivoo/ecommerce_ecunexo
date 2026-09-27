@@ -1,0 +1,55 @@
+.tag {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.tagSmall {
+  font-size: var(--text-sm);
+}
+
+.tagSmall .original {
+  font-size: var(--text-xs);
+}
+
+.tagSmall .price {
+  font-size: var(--text-sm);
+}
+
+.badge {
+  align-self: center;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background-color: var(--alert);
+  color: var(--surface);
+  font-size: var(--text-xs);
+  font-weight: 800;
+}
+
+.original {
+  color: var(--steel);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: line-through;
+}
+
+.price {
+  font-size: var(--text-base);
+  font-weight: 800;
+}
+
+.tagLarge .original {
+  font-size: var(--text-base);
+}
+
+.tagLarge .price {
+  font-size: var(--text-2xl);
+}
+
+.tagLarge .badge {
+  font-size: var(--text-sm);
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { PriceTag } from '@/features/catalog/components/PriceTag'
 import { formatPrice } from '@/lib/format'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
@@ -137,9 +138,14 @@ export function CartDrawer() {
                         +
                       </button>
                     </div>
-                    <p className={styles.itemPrice}>
-                      {formatPrice(item.price * item.quantity)}
-                    </p>
+                    <PriceTag
+                      size="sm"
+                      price={item.price * item.quantity}
+                      originalPrice={
+                        item.originalPrice ? item.originalPrice * item.quantity : null
+                      }
+                      discountPercent={item.discountPercent}
+                    />
                   </div>
                   <button
                     type="button"

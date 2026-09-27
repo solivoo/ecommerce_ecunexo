@@ -73,6 +73,8 @@ export interface StorefrontProduct {
   name: string
   description: string | null
   price: number | null
+  originalPrice?: number | null
+  discountPercent?: number | null
   thumbUrl: string | null
   mediumUrl: string | null
   secondMediumUrl: string | null
@@ -106,6 +108,8 @@ export interface StorefrontVariant {
   name: string
   sku: string | null
   price: number | null
+  originalPrice?: number | null
+  discountPercent?: number | null
   inStock: boolean
   availableQuantity: number
   dimensions: Record<string, string> | null
@@ -144,6 +148,8 @@ export interface StorefrontProductDetail {
   sku: string | null
   description: string | null
   price: number | null
+  originalPrice?: number | null
+  discountPercent?: number | null
   inStock: boolean
   availableQuantity: number
   images: StorefrontImage[]

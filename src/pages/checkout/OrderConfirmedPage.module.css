@@ -137,3 +137,56 @@
 .whatsapp:hover {
   background: #d3f2e0;
 }
+
+.proof {
+  margin-block-start: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background-color: var(--paper);
+}
+
+.proofTitle {
+  font-size: var(--text-base);
+  font-weight: 800;
+}
+
+.proofHint {
+  margin-block-start: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.proofSuccess {
+  margin-block-start: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ok);
+}
+
+.proofForm {
+  margin-block-start: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.proofError {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--alert);
+}
+
+.proofAction {
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius-sm);
+  background-color: var(--signal);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.proofAction:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

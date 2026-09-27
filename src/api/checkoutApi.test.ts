@@ -1,6 +1,10 @@
 import type { AxiosResponse } from 'axios'
 import { describe, expect, it, vi } from 'vitest'
-import { createStorefrontOrder, getCheckoutOptions } from './checkoutApi'
+import {
+  createStorefrontOrder,
+  getCheckoutOptions,
+  uploadPaymentProof,
+} from './checkoutApi'
 import { api } from './client'
 import type { CreateStorefrontOrderInput, StorefrontOrderResult } from './types'
 
@@ -15,6 +19,7 @@ describe('checkoutApi', () => {
       data: {
         paymentMethods: [{ code: 'BankTransfer', label: 'Transferencia bancaria' }],
         shippingMethods: [{ code: 'Courier', label: 'Envío a domicilio', cost: 4.5 }],
+        turnstileSiteKey: 'site-key-1',
       },
     } as AxiosResponse)
 
@@ -24,6 +29,7 @@ describe('checkoutApi', () => {
       '/api/v1/public/tenants/tenant-1/storefront/checkout-options',
     )
     expect(options.paymentMethods[0].instructions).toBeNull()
+    expect(options.turnstileSiteKey).toBe('site-key-1')
   })
 
   it('crea el pedido contra el endpoint público de órdenes', async () => {
@@ -52,6 +58,7 @@ describe('checkoutApi', () => {
       totalAmount: 11.5,
       paymentMethod: 'BankTransfer',
       paymentInstructions: null,
+      paymentProofToken: 'proof-token-1',
     }
 
     mockedPost.mockResolvedValue({ data: result } as AxiosResponse)
@@ -60,6 +67,25 @@ describe('checkoutApi', () => {
     expect(mockedPost).toHaveBeenCalledWith(
       '/api/v1/public/tenants/tenant-1/storefront/orders',
       input,
+    )
+  })
+
+  it('sube el comprobante como multipart con el header del token', async () => {
+    const uploadResult = {
+      uploadedAtUtc: '2026-09-27T00:00:00Z',
+      fileName: 'comprobante.png',
+      contentType: 'image/png',
+    }
+    mockedPost.mockResolvedValue({ data: uploadResult } as AxiosResponse)
+
+    const file = new File(['comprobante'], 'comprobante.png', { type: 'image/png' })
+    const result = await uploadPaymentProof('tenant-1', 'o1', 'proof-token-1', file)
+
+    expect(result).toEqual(uploadResult)
+    expect(mockedPost).toHaveBeenCalledWith(
+      '/api/v1/public/tenants/tenant-1/storefront/orders/o1/payment-proof',
+      expect.any(FormData),
+      { headers: { 'X-Payment-Proof-Token': 'proof-token-1' } },
     )
   })
 })

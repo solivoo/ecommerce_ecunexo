@@ -2,6 +2,7 @@ import { api } from './client'
 import type {
   CheckoutOptions,
   CreateStorefrontOrderInput,
+  PaymentProofUploadResult,
   StorefrontOrderResult,
 } from './types'
 
@@ -26,6 +27,7 @@ export async function getCheckoutOptions(
     })),
     shippingMethods: data.shippingMethods,
     whatsappPhone: data.whatsappPhone ?? null,
+    turnstileSiteKey: data.turnstileSiteKey ?? null,
   }
 }
 
@@ -36,6 +38,23 @@ export async function createStorefrontOrder(
   const response = await api.post<StorefrontOrderResult>(
     storefrontUrl(tenantId, '/orders'),
     input,
+  )
+  return response.data
+}
+
+export async function uploadPaymentProof(
+  tenantId: string,
+  orderId: string,
+  token: string,
+  file: File,
+): Promise<PaymentProofUploadResult> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await api.post<PaymentProofUploadResult>(
+    storefrontUrl(tenantId, `/orders/${orderId}/payment-proof`),
+    formData,
+    { headers: { 'X-Payment-Proof-Token': token } },
   )
   return response.data
 }

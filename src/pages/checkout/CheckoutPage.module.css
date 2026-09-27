@@ -332,3 +332,9 @@
   height: 1px;
   overflow: hidden;
 }
+
+.turnstile {
+  margin-block-start: var(--space-4);
+  display: flex;
+  justify-content: center;
+}

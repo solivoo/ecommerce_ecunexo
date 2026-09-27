@@ -9,6 +9,7 @@ import type {
 } from '@/api/types'
 import { formatPrice, roundCurrency } from '@/lib/format'
 import { createId } from '@/lib/id'
+import { TurnstileWidget } from '@/lib/turnstile'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import { clearCart, selectCartItems, selectCartSubtotal } from '@/store/cartSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -98,6 +99,8 @@ export function CheckoutPage() {
   const [placed, setPlaced] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [stockConflict, setStockConflict] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [turnstileResetSignal, setTurnstileResetSignal] = useState(0)
   const requestIdRef = useRef<string | null>(null)
 
   useDocumentTitle(`Checkout · ${storeName}`)
@@ -198,6 +201,7 @@ export function CheckoutPage() {
       notes: form.notes.trim() ? form.notes.trim() : null,
       website: website.trim() ? website : null,
       formElapsedMs: elapsedMsSince(startedAtRef.current),
+      turnstileToken: turnstileToken ?? null,
     }
 
     setSaving(true)
@@ -215,7 +219,11 @@ export function CheckoutPage() {
       dispatch(clearCart())
     } catch (error) {
       const apiError = normalizeApiError(error)
-      if (
+      if (apiError.code === 'ecommerce.checkout.captcha_failed') {
+        setTurnstileToken(null)
+        setTurnstileResetSignal((value) => value + 1)
+        setSubmitError(apiError.message)
+      } else if (
         apiError.status === 409 &&
         apiError.code === 'ecommerce.order.stock_conflict'
       ) {
@@ -455,6 +463,16 @@ export function CheckoutPage() {
                     </button>
                   </div>
                 ) : null}
+              </div>
+            ) : null}
+
+            {options.turnstileSiteKey ? (
+              <div className={styles.turnstile}>
+                <TurnstileWidget
+                  siteKey={options.turnstileSiteKey}
+                  onToken={setTurnstileToken}
+                  resetSignal={turnstileResetSignal}
+                />
               </div>
             ) : null}
 

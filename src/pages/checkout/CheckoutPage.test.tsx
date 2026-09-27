@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CheckoutOptions, StorefrontOrderResult } from '@/api/types'
 import { formatPrice } from '@/lib/format'
 import { cartReducer, type CartItem } from '@/store/cartSlice'
@@ -65,6 +65,7 @@ const orderResult: StorefrontOrderResult = {
   totalAmount: 18,
   paymentMethod: 'BankTransfer',
   paymentInstructions: 'Banco Pichincha · Cuenta 1234567890',
+  paymentProofToken: '',
 }
 
 function renderPage() {
@@ -118,6 +119,10 @@ describe('CheckoutPage', () => {
   beforeEach(() => {
     mockedGetOptions.mockResolvedValue(options)
     mockedCreateOrder.mockResolvedValue(orderResult)
+  })
+
+  afterEach(() => {
+    delete window.turnstile
   })
 
   it('renderiza las opciones y calcula el total con el envío', async () => {
@@ -183,6 +188,65 @@ describe('CheckoutPage', () => {
       }),
     )
     expect(store.getState().cart.items).toEqual([])
+  })
+
+  it('envía el turnstileToken cuando Turnstile está configurado', async () => {
+    window.turnstile = {
+      render: vi.fn((_container, renderOptions) => {
+        const callback = renderOptions.callback as (token: string) => void
+        callback('turnstile-test-token')
+        return 'widget-1'
+      }),
+      remove: vi.fn(),
+      reset: vi.fn(),
+    }
+
+    mockedGetOptions.mockResolvedValue({
+      ...options,
+      turnstileSiteKey: 'site-key-test',
+    })
+
+    renderPage()
+
+    await screen.findByText('Transferencia bancaria')
+    await fillRequiredFields()
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    expect(await screen.findByText('Pedido confirmado')).toBeInTheDocument()
+    expect(mockedCreateOrder).toHaveBeenCalledWith(
+      'tenant-1',
+      expect.objectContaining({ turnstileToken: 'turnstile-test-token' }),
+    )
+  })
+
+  it('resetea el widget y muestra el error cuando falla el captcha', async () => {
+    const reset = vi.fn()
+    window.turnstile = {
+      render: vi.fn(() => 'widget-2'),
+      remove: vi.fn(),
+      reset,
+    }
+    mockedGetOptions.mockResolvedValue({
+      ...options,
+      turnstileSiteKey: 'site-key-test',
+    })
+    mockedCreateOrder.mockRejectedValue({
+      status: 400,
+      code: 'ecommerce.checkout.captcha_failed',
+      message: 'No pudimos verificar que eres humano. Intenta de nuevo.',
+      detail: null,
+    })
+
+    renderPage()
+
+    await screen.findByText('Transferencia bancaria')
+    await fillRequiredFields()
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    expect(
+      await screen.findByText('No pudimos verificar que eres humano. Intenta de nuevo.'),
+    ).toBeInTheDocument()
+    expect(reset).toHaveBeenCalled()
   })
 
   it('mantiene el carrito y avisa cuando hay conflicto de stock', async () => {

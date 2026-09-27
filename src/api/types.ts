@@ -171,6 +171,8 @@ export interface CheckoutOptions {
   paymentMethods: CheckoutPaymentMethod[]
   shippingMethods: CheckoutShippingMethod[]
   whatsappPhone?: string | null
+  /** Site key de Cloudflare Turnstile; null/ausente cuando el captcha está deshabilitado. */
+  turnstileSiteKey?: string | null
 }
 
 export interface CreateStorefrontOrderCustomerInput {
@@ -203,6 +205,8 @@ export interface CreateStorefrontOrderInput {
   website?: string | null
   /** Milisegundos desde que se abrió el formulario (fricción mínima anti-bot). */
   formElapsedMs?: number | null
+  /** Token de Cloudflare Turnstile cuando el captcha está habilitado. */
+  turnstileToken?: string | null
 }
 
 export interface StorefrontOrderResult {
@@ -215,4 +219,12 @@ export interface StorefrontOrderResult {
   totalAmount: number
   paymentMethod: string
   paymentInstructions: string | null
+  /** Token secreto para autorizar la subida del comprobante de pago. */
+  paymentProofToken: string
+}
+
+export interface PaymentProofUploadResult {
+  uploadedAtUtc: string
+  fileName: string
+  contentType: string
 }

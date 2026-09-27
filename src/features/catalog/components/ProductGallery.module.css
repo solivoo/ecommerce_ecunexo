@@ -23,10 +23,19 @@
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
-  color: var(--steel);
-  background-color: var(--surface);
+  color: var(--ink-soft);
+  background-color: var(--paper-deep);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--paper-deep) 0 12px,
+    var(--line) 12px 13px
+  );
   border: var(--border-w) dashed var(--line);
   border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .thumbs {

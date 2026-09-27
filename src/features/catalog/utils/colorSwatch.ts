@@ -24,6 +24,16 @@ function normalizeColorName(value: string): string {
     .replace(/[\u0300-\u036f]/g, '')
 }
 
+const HEX_TO_COLOR_NAME: Record<string, string> = Object.fromEntries(
+  Object.entries(COLOR_SWATCHES).map(([name, hex]) => [hex.toLowerCase(), name]),
+)
+
+/** Resuelve un hex a un nombre de color conocido (capitalizado), o null. */
+export function resolveColorName(value: string): string | null {
+  const name = HEX_TO_COLOR_NAME[value.trim().toLowerCase()]
+  return name ? name.charAt(0).toUpperCase() + name.slice(1) : null
+}
+
 /** Resuelve un color a hex: acepta nombres conocidos y valores hex directos. */
 export function resolveColorHex(value: string): string | null {
   const trimmed = value.trim()

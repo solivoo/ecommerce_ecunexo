@@ -5,6 +5,7 @@ import { PriceTag } from '@/features/catalog/components/PriceTag'
 import { ProductGallery } from '@/features/catalog/components/ProductGallery'
 import { VariantSelector } from '@/features/catalog/components/VariantSelector'
 import { LikeButton } from '@/features/likes/LikeButton'
+import { resolveColorName } from '@/features/catalog/utils/colorSwatch'
 import {
   findVariant,
   initialSelection,
@@ -390,14 +391,16 @@ function AttributeValue({ value }: { value: string }) {
   }
 
   return (
-    <span className={styles.dots}>
+    <span className={styles.colorValues}>
       {parts.map((part) => (
-        <span
-          key={part}
-          className={styles.dot}
-          style={{ backgroundColor: part }}
-          title={part}
-        />
+        <span key={part} className={styles.colorValue}>
+          <span
+            className={styles.dot}
+            style={{ backgroundColor: part }}
+            aria-hidden="true"
+          />
+          {resolveColorName(part) ?? part}
+        </span>
       ))}
     </span>
   )

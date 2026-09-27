@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { StorefrontProduct } from '@/api/types'
 import { LikeButton } from '@/features/likes/LikeButton'
@@ -18,6 +19,17 @@ export function ProductCard({ product }: ProductCardProps) {
   const imageUrl = product.mediumUrl ?? product.thumbUrl
   const hiddenColors = product.colors.length - MAX_VISIBLE_COLORS
   const canAdd = !product.hasVariants && product.inStock && product.price !== null
+  const [added, setAdded] = useState(false)
+  const addedTimer = useRef<number | null>(null)
+
+  useEffect(
+    () => () => {
+      if (addedTimer.current !== null) {
+        window.clearTimeout(addedTimer.current)
+      }
+    },
+    [],
+  )
 
   function handleAdd() {
     if (product.price === null) return
@@ -33,6 +45,11 @@ export function ProductCard({ product }: ProductCardProps) {
         thumbUrl: product.thumbUrl,
       }),
     )
+    setAdded(true)
+    if (addedTimer.current !== null) {
+      window.clearTimeout(addedTimer.current)
+    }
+    addedTimer.current = window.setTimeout(() => setAdded(false), 1800)
   }
 
   return (
@@ -112,11 +129,11 @@ export function ProductCard({ product }: ProductCardProps) {
           ) : product.inStock ? (
             <button
               type="button"
-              className={styles.cta}
+              className={`${styles.cta} ${added ? styles.ctaAdded : ''}`}
               disabled={!canAdd}
               onClick={handleAdd}
             >
-              Agregar
+              {added ? 'Agregado ✓' : 'Agregar'}
             </button>
           ) : (
             <button type="button" className={styles.cta} disabled>
@@ -124,6 +141,9 @@ export function ProductCard({ product }: ProductCardProps) {
             </button>
           )}
         </div>
+        <span className="visually-hidden" role="status">
+          {added ? `${product.name} se agregó al carrito` : ''}
+        </span>
       </div>
     </article>
   )

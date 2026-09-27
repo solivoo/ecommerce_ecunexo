@@ -64,8 +64,9 @@ export function StoreHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-        <Link to="/" className={styles.brand}>
-          {logoUrl ? <img className={styles.logo} src={logoUrl} alt={storeName} /> : storeName}
+        <Link to="/" className={styles.brand} title={storeName}>
+          {logoUrl ? <img className={styles.logo} src={logoUrl} alt="" /> : null}
+          <span className={styles.brandName}>{storeName}</span>
         </Link>
         <form className={styles.search} role="search" onSubmit={handleSubmit}>
           <label className="visually-hidden" htmlFor="store-search">

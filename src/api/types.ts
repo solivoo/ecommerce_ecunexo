@@ -202,7 +202,7 @@ export interface CreateStorefrontOrderInput {
   items: CreateStorefrontOrderItemInput[]
   notes: string | null
   /** Campo trampa anti-bot: debe ir vacío. */
-  website?: string | null
+  contactFax?: string | null
   /** Milisegundos desde que se abrió el formulario (fricción mínima anti-bot). */
   formElapsedMs?: number | null
   /** Token de Cloudflare Turnstile cuando el captcha está habilitado. */

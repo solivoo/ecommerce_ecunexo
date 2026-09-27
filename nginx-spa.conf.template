@@ -1,3 +1,11 @@
+# IP real del comprador para el rate limiting del API.
+# NPM sobreescribe X-Real-IP con el peer real; si algún día se activa el proxy de Cloudflare,
+# cambiar la preferencia a $http_cf_connecting_ip.
+map $http_x_real_ip $storefront_client_ip {
+    default $http_x_real_ip;
+    ""      $remote_addr;
+}
+
 server {
     listen 80;
     server_name _;
@@ -10,8 +18,10 @@ server {
         proxy_http_version 1.1;
         # El Host original es obligatorio: el tenant se resuelve por dominio.
         proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # La IP del comprador se calcula en este proxy: no se reenvía la del cliente.
+        proxy_set_header X-Forwarded-For $storefront_client_ip;
+        proxy_set_header X-Real-IP $storefront_client_ip;
+        proxy_set_header CF-Connecting-IP $storefront_client_ip;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 60s;
     }

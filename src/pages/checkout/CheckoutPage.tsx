@@ -86,7 +86,7 @@ export function CheckoutPage() {
   const [optionsError, setOptionsError] = useState<string | null>(null)
   const [optionsReloadKey, setOptionsReloadKey] = useState(0)
   const [form, setForm] = useState<CheckoutFormState>(EMPTY_FORM)
-  const [website, setWebsite] = useState('')
+  const [contactFax, setContactFax] = useState('')
   const startedAtRef = useRef(0)
 
   useEffect(() => {
@@ -199,7 +199,7 @@ export function CheckoutPage() {
         quantity: item.quantity,
       })),
       notes: form.notes.trim() ? form.notes.trim() : null,
-      website: website.trim() ? website : null,
+      contactFax: contactFax.trim() ? contactFax : null,
       formElapsedMs: elapsedMsSince(startedAtRef.current),
       turnstileToken: turnstileToken ?? null,
     }
@@ -268,10 +268,10 @@ export function CheckoutPage() {
         <form className={styles.layout} noValidate onSubmit={handleSubmit}>
           <input
             type="text"
-            name="website"
+            name="contactFax"
             className={styles.honeypot}
-            value={website}
-            onChange={(event) => setWebsite(event.target.value)}
+            value={contactFax}
+            onChange={(event) => setContactFax(event.target.value)}
             tabIndex={-1}
             autoComplete="off"
             aria-hidden="true"

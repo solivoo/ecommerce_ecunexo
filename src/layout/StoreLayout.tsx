@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { resolveApiUrl } from '@/api/client'
 import { GlobalStatus } from '@/app/GlobalStatus'
+import { StoreUpdatingGuard } from '@/app/StoreUpdatingGuard'
 import { CartDrawer } from '@/features/cart/components/CartDrawer'
 import { letterFavicon, setFavicon } from '@/lib/favicon'
 import { STORE_NAME } from '@/lib/store'
@@ -66,6 +67,7 @@ export function StoreLayout() {
         <Outlet />
       </main>
       <StoreFooter />
+      <StoreUpdatingGuard />
       <ScrollRestoration />
     </div>
   )

@@ -29,6 +29,11 @@ export interface StorefrontConfig {
   currency: string
 }
 
+export interface StorefrontStatus {
+  revision: string
+  updatedAt: string | null
+}
+
 export interface CatalogQuery {
   search?: string
   sort?: CatalogSort

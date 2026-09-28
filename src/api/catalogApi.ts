@@ -10,10 +10,19 @@ import type {
   StorefrontProduct,
   StorefrontProductDetail,
   StorefrontProductPage,
+  StorefrontStatus,
 } from './types'
 
 function storefrontUrl(tenantId: string, path: string): string {
   return `/api/v1/public/tenants/${tenantId}/storefront${path}`
+}
+
+export async function getStorefrontStatus(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<StorefrontStatus> {
+  const { data } = await api.get<StorefrontStatus>(storefrontUrl(tenantId, '/status'), { signal })
+  return data
 }
 
 function mapKind(kind: number | string): CatalogItemKind {

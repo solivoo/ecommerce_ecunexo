@@ -9,9 +9,8 @@
 
 * **Repositorio:** `github.com/solivoo/ecommerce_ecunexo` (separado de `ecunexo` y `Ecunexo_cliente`).
 * **Rama Activa:** `main` (sincronizada con `origin/main`).
-* **Última Versión Publicada:** `v1.0.0` (tag anotado; `package.json` en `1.0.0`).
-* **Verificación:** `pnpm test:run` 77/77, `pnpm build` limpio y contenedor Docker probado contra la
-  API real (SPA `200` y `/api/.../storefront/products` con precio resuelto).
+* **Última Versión Publicada:** `v1.1.0` (`package.json` en `1.1.0`).
+* **Verificación:** `pnpm test:run` 93/93 y `pnpm build` limpio.
 
 ---
 
@@ -40,6 +39,11 @@ Cliente → https://<dominio-del-cliente>
 
 ## 3. Hitos Recientes Completados
 
+* **Modo "Estamos actualizando la tienda" (`storefrontStatusSlice`, `StoreUpdatingGuard`,
+  `catalogApi.getStorefrontStatus`) [v1.1.0]:** la vitrina consulta
+  `GET /api/v1/public/tenants/{t}/storefront/status` (revisión del catálogo) cada 15 s —2 s mientras
+  actualiza— y al detectar un cambio tapa el sitio con una pantalla elegante hasta que la revisión
+  se estabiliza y recarga con datos frescos; no interrumpe `/checkout` ni `/pedido`.
 * **Carrito y checkout invitado (Fase 2C):** carrito persistido en
   `localStorage('ecunexo.cart.v1')` con merge y tope de 10 por ítem (`cartSlice` +
   `CartDrawer`), botón Agregar en tarjetas y ficha con cantidad topeada por stock,

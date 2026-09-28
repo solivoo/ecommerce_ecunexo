@@ -8,12 +8,14 @@ import {
 } from '@/store/cartSlice'
 import { productReducer } from '@/store/productSlice'
 import { storefrontReducer } from '@/store/storefrontSlice'
+import { storefrontStatusReducer } from '@/store/storefrontStatusSlice'
 import { uiReducer } from '@/store/uiSlice'
 
 export const store = configureStore({
   reducer: {
     ui: uiReducer,
     storefront: storefrontReducer,
+    storefrontStatus: storefrontStatusReducer,
     catalog: catalogReducer,
     product: productReducer,
     cart: cartReducer,

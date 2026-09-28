@@ -235,9 +235,38 @@ describe('ProductDetailPage', () => {
         discountPercent: null,
         quantity: 2,
         thumbUrl: 'https://cdn/negro-thumb',
+        minOrderQuantity: 1,
       },
     ])
     expect(screen.getByRole('status')).toHaveTextContent('se agregó al carrito')
+  })
+
+  it('respeta la compra mínima de la variante y muestra el hint', async () => {
+    mockedGetProduct.mockResolvedValue({
+      ...detail,
+      variants: [
+        buildVariant('v1', '39-41', '#000000', 'CALC-NEG-39', 3.5, true, 'https://cdn/negro'),
+      ].map((variant) => ({ ...variant, minOrderQuantity: 4, availableQuantity: 10 })),
+      matrix: {
+        depth: 1,
+        primaryAxis: 'Tallas',
+        axes: [{ name: 'Tallas', type: 'size', values: ['39-41'], isPhotoGroup: false }],
+        groupValues: [],
+      },
+    })
+    const store = renderPage()
+
+    await screen.findByRole('heading', { name: 'Calcetín Runner' })
+
+    expect(screen.getByText('Mínimo 4')).toBeInTheDocument()
+    const quantityInput = screen.getByLabelText('Cantidad') as HTMLInputElement
+    expect(quantityInput.min).toBe('4')
+    expect(quantityInput.value).toBe('4')
+    expect(screen.getByRole('button', { name: 'Disminuir cantidad' })).toBeDisabled()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Agregar al carrito' }))
+    expect(store.getState().cart.items[0]?.quantity).toBe(4)
+    expect(store.getState().cart.items[0]?.minOrderQuantity).toBe(4)
   })
 
   it('deshabilita el botón cuando la variante está agotada', async () => {

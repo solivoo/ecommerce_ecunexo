@@ -28,6 +28,7 @@ export async function getCheckoutOptions(
     shippingMethods: data.shippingMethods,
     whatsappPhone: data.whatsappPhone ?? null,
     turnstileSiteKey: data.turnstileSiteKey ?? null,
+    minOrderAmount: data.minOrderAmount ?? null,
   }
 }
 

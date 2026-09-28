@@ -131,6 +131,12 @@
   color: var(--ink-soft);
 }
 
+.minQuantityHint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+
 .quantity {
   display: inline-flex;
   align-items: stretch;

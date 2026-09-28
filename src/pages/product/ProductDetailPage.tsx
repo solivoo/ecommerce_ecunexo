@@ -121,6 +121,10 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
     CART_MAX_QUANTITY,
     Math.max(0, Math.floor(quantityAvailable)),
   )
+  const productMinQuantity = Math.max(1, Math.trunc(product.minOrderQuantity ?? 1))
+  const minQuantity = selectedVariant
+    ? Math.max(1, Math.trunc(selectedVariant.minOrderQuantity ?? productMinQuantity))
+    : productMinQuantity
   const requiresVariantSelection = axes.length > 0 && selectedVariant === null
 
   const handleAxisChange = useCallback(
@@ -219,6 +223,7 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
             }
             isAvailable={isAvailable}
             maxQuantity={maxQuantity}
+            minQuantity={minQuantity}
             requiresVariantSelection={requiresVariantSelection}
           />
 
@@ -260,6 +265,7 @@ interface AddToCartPanelProps {
   thumbUrl: string | null
   isAvailable: boolean
   maxQuantity: number
+  minQuantity: number
   requiresVariantSelection: boolean
 }
 
@@ -273,20 +279,22 @@ function AddToCartPanel({
   thumbUrl,
   isAvailable,
   maxQuantity,
+  minQuantity,
   requiresVariantSelection,
 }: AddToCartPanelProps) {
   const dispatch = useAppDispatch()
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState(minQuantity)
   const [addedName, setAddedName] = useState<string | null>(null)
-  const canAdd = isAvailable && maxQuantity > 0 && price !== null
+  const stockMeetsMinimum = maxQuantity >= minQuantity
+  const canAdd = isAvailable && maxQuantity > 0 && price !== null && stockMeetsMinimum
 
   const handleQuantityChange = (value: string) => {
     const parsed = Number.parseInt(value, 10)
     if (!Number.isFinite(parsed)) {
-      setQuantity(1)
+      setQuantity(minQuantity)
       return
     }
-    setQuantity(Math.min(maxQuantity, Math.max(1, parsed)))
+    setQuantity(Math.min(maxQuantity, Math.max(minQuantity, parsed)))
   }
 
   const handleAdd = () => {
@@ -302,6 +310,7 @@ function AddToCartPanel({
         discountPercent,
         quantity,
         thumbUrl,
+        minOrderQuantity: minQuantity,
       }),
     )
     setAddedName(productName)
@@ -317,8 +326,8 @@ function AddToCartPanel({
           <button
             type="button"
             aria-label="Disminuir cantidad"
-            disabled={!canAdd || quantity <= 1}
-            onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+            disabled={!canAdd || quantity <= minQuantity}
+            onClick={() => setQuantity((current) => Math.max(minQuantity, current - 1))}
           >
             −
           </button>
@@ -327,8 +336,8 @@ function AddToCartPanel({
             className={styles.quantityInput}
             type="number"
             inputMode="numeric"
-            min={1}
-            max={Math.max(1, maxQuantity)}
+            min={minQuantity}
+            max={Math.max(minQuantity, maxQuantity)}
             value={quantity}
             disabled={!canAdd}
             onChange={(event) => handleQuantityChange(event.target.value)}
@@ -344,6 +353,9 @@ function AddToCartPanel({
             +
           </button>
         </div>
+        {minQuantity > 1 ? (
+          <p className={styles.minQuantityHint}>Mínimo {minQuantity}</p>
+        ) : null}
       </div>
       <button
         type="button"
@@ -357,11 +369,13 @@ function AddToCartPanel({
         <p className={styles.addHint}>
           {!isAvailable || maxQuantity === 0
             ? 'No hay stock disponible para esta opción.'
-            : price === null
-              ? 'El precio no está disponible por ahora.'
-              : requiresVariantSelection
-                ? 'Elige una opción para continuar.'
-                : 'No disponible.'}
+            : !stockMeetsMinimum
+              ? `No hay stock suficiente para el mínimo de ${minQuantity}.`
+              : price === null
+                ? 'El precio no está disponible por ahora.'
+                : requiresVariantSelection
+                  ? 'Elige una opción para continuar.'
+                  : 'No disponible.'}
         </p>
       ) : null}
       {addedName ? (

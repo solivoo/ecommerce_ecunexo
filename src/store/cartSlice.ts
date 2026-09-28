@@ -15,6 +15,8 @@ export interface CartItem {
   discountPercent?: number | null
   quantity: number
   thumbUrl: string | null
+  /** Cantidad mínima de compra del producto/variante (1 por defecto). */
+  minOrderQuantity?: number
 }
 
 export interface CartState {
@@ -58,6 +60,13 @@ function sanitizeItem(value: unknown): CartItem | null {
         ? Math.round(candidate.discountPercent)
         : Math.round((1 - roundedPrice / originalPrice) * 100)
 
+  const minOrderQuantity =
+    typeof candidate.minOrderQuantity === 'number' &&
+    Number.isFinite(candidate.minOrderQuantity) &&
+    candidate.minOrderQuantity >= 1
+      ? Math.trunc(candidate.minOrderQuantity)
+      : 1
+
   return {
     catalogItemId,
     name,
@@ -67,6 +76,7 @@ function sanitizeItem(value: unknown): CartItem | null {
     discountPercent: discountPercent !== null && discountPercent > 0 ? discountPercent : null,
     quantity: clampQuantity(typeof quantity === 'number' ? quantity : 1),
     thumbUrl: typeof thumbUrl === 'string' && thumbUrl.trim() ? thumbUrl : null,
+    minOrderQuantity,
   }
 }
 
@@ -175,5 +185,12 @@ export function selectCartSubtotal(state: CartRootState): number {
       (total, item) => total + item.price * item.quantity,
       0,
     ),
+  )
+}
+
+/** Ítems cuya cantidad está por debajo de su compra mínima. */
+export function selectCartItemsBelowMinQuantity(state: CartRootState): CartItem[] {
+  return selectCartItems(state).filter(
+    (item) => item.quantity < (item.minOrderQuantity ?? 1),
   )
 }

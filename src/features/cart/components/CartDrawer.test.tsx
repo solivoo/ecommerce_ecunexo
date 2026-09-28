@@ -3,11 +3,20 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatPrice } from '@/lib/format'
 import { cartReducer, type CartItem } from '@/store/cartSlice'
+import { storefrontReducer } from '@/store/storefrontSlice'
 import { uiReducer } from '@/store/uiSlice'
 import { CartDrawer } from './CartDrawer'
+
+vi.mock('@/api/checkoutApi', () => ({
+  getCheckoutOptions: vi.fn(),
+}))
+
+import { getCheckoutOptions } from '@/api/checkoutApi'
+
+const mockedGetCheckoutOptions = vi.mocked(getCheckoutOptions)
 
 const items: CartItem[] = [
   {
@@ -28,14 +37,39 @@ const items: CartItem[] = [
   },
 ]
 
-function renderDrawer() {
-  const store = configureStore({
-    reducer: { cart: cartReducer, ui: uiReducer },
-    preloadedState: {
-      cart: { items, tenantId: 'tenant-1' },
-      ui: { pendingHttp: 0, httpMessage: null, cartDrawerOpen: true, filterDrawerOpen: false },
-    },
-  })
+function renderDrawer(overrides: { items?: CartItem[]; withTenant?: boolean } = {}) {
+  const cartState = { items: overrides.items ?? items, tenantId: 'tenant-1' }
+  const uiState = {
+    pendingHttp: 0,
+    httpMessage: null,
+    cartDrawerOpen: true,
+    filterDrawerOpen: false,
+  }
+
+  const store = overrides.withTenant
+    ? configureStore({
+        reducer: { cart: cartReducer, ui: uiReducer, storefront: storefrontReducer },
+        preloadedState: {
+          cart: cartState,
+          ui: uiState,
+          storefront: {
+            config: {
+              tenantId: 'tenant-1',
+              name: 'Tienda Demo',
+              logoUrl: null,
+              primaryColorHex: null,
+              locale: 'es-EC',
+              currency: 'USD',
+            },
+            status: 'succeeded' as const,
+            error: null,
+          },
+        },
+      })
+    : configureStore({
+        reducer: { cart: cartReducer, ui: uiReducer },
+        preloadedState: { cart: cartState, ui: uiState },
+      })
 
   render(
     <Provider store={store}>
@@ -52,6 +86,9 @@ function renderDrawer() {
 }
 
 describe('CartDrawer', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
   it('lista los ítems con su subtotal', () => {
     renderDrawer()
 
@@ -106,5 +143,60 @@ describe('CartDrawer', () => {
 
     expect(store.getState().ui.cartDrawerOpen).toBe(false)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('bloquea "Ir a pagar" si un ítem está por debajo de su compra mínima', async () => {
+    mockedGetCheckoutOptions.mockResolvedValue({
+      paymentMethods: [],
+      shippingMethods: [],
+      minOrderAmount: null,
+    })
+
+    renderDrawer({
+      withTenant: true,
+      items: [
+        {
+          catalogItemId: 'p1',
+          name: 'Calcetín Runner',
+          sku: 'CALC-1',
+          price: 3.5,
+          quantity: 2,
+          thumbUrl: null,
+          minOrderQuantity: 4,
+        },
+      ],
+    })
+
+    expect(await screen.findByText('Mínimo 4 por producto.')).toBeInTheDocument()
+    expect(screen.getByText('Hay productos por debajo de su compra mínima.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ir a pagar' })).toBeDisabled()
+  })
+
+  it('bloquea "Ir a pagar" si el subtotal no alcanza el pedido mínimo', async () => {
+    mockedGetCheckoutOptions.mockResolvedValue({
+      paymentMethods: [],
+      shippingMethods: [],
+      minOrderAmount: 50,
+    })
+
+    renderDrawer({ withTenant: true })
+
+    expect(
+      await screen.findByText(`El pedido mínimo es ${formatPrice(50)}.`),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ir a pagar' })).toBeDisabled()
+  })
+
+  it('permite "Ir a pagar" cuando se cumple el mínimo', async () => {
+    mockedGetCheckoutOptions.mockResolvedValue({
+      paymentMethods: [],
+      shippingMethods: [],
+      minOrderAmount: 10,
+    })
+
+    renderDrawer({ withTenant: true })
+
+    const button = screen.getByRole('button', { name: 'Ir a pagar' })
+    expect(button).toBeEnabled()
   })
 })

@@ -126,6 +126,7 @@ export interface StorefrontVariant {
   imageInheritedFrom: string | null
   images: StorefrontImage[] | null
   extraColors: string[] | null
+  minOrderQuantity?: number
 }
 
 export interface StorefrontMatrixAxis {
@@ -166,6 +167,7 @@ export interface StorefrontProductDetail {
   likeCount: number
   createdAt: string
   updatedAt: string | null
+  minOrderQuantity?: number
 }
 
 export interface RawStorefrontProduct extends Omit<StorefrontProduct, 'kind'> {
@@ -194,6 +196,8 @@ export interface CheckoutOptions {
   whatsappPhone?: string | null
   /** Site key de Cloudflare Turnstile; null/ausente cuando el captcha está deshabilitado. */
   turnstileSiteKey?: string | null
+  /** Monto mínimo del pedido; null/ausente o 0 = sin mínimo. */
+  minOrderAmount?: number | null
 }
 
 export interface CreateStorefrontOrderCustomerInput {

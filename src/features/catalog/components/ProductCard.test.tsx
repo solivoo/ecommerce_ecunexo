@@ -130,6 +130,7 @@ describe('ProductCard', () => {
         discountPercent: null,
         quantity: 1,
         thumbUrl: null,
+        minOrderQuantity: 1,
       },
     ])
   })

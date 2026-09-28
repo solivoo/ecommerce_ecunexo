@@ -68,7 +68,7 @@ const orderResult: StorefrontOrderResult = {
   paymentProofToken: '',
 }
 
-function renderPage() {
+function renderPage(cartItems: CartItem[] = items) {
   const store = configureStore({
     reducer: {
       cart: cartReducer,
@@ -76,7 +76,7 @@ function renderPage() {
       storefront: storefrontReducer,
     },
     preloadedState: {
-      cart: { items, tenantId: 'tenant-1' },
+      cart: { items: cartItems, tenantId: 'tenant-1' },
       storefront: {
         config: {
           tenantId: 'tenant-1',
@@ -294,5 +294,37 @@ describe('CheckoutPage', () => {
     expect(screen.getByRole('button', { name: 'Revisar carrito' })).toBeInTheDocument()
     expect(store.getState().cart.items).toHaveLength(2)
     expect(mockedGetOptions).toHaveBeenCalledTimes(2)
+  })
+
+  it('deshabilita confirmar cuando el subtotal no alcanza el pedido mínimo', async () => {
+    mockedGetOptions.mockResolvedValue({ ...options, minOrderAmount: 50 })
+    renderPage()
+
+    await screen.findByText('Transferencia bancaria')
+
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
+    expect(screen.getByText(`El pedido mínimo es ${formatPrice(50)}.`)).toBeInTheDocument()
+    expect(mockedCreateOrder).not.toHaveBeenCalled()
+  })
+
+  it('deshabilita confirmar cuando un ítem está por debajo de su compra mínima', async () => {
+    renderPage([
+      {
+        catalogItemId: 'p1',
+        name: 'Calcetín Runner',
+        sku: 'CALC-1',
+        price: 3.5,
+        quantity: 2,
+        thumbUrl: null,
+        minOrderQuantity: 4,
+      },
+    ])
+
+    await screen.findByText('Transferencia bancaria')
+
+    expect(
+      screen.getByText('Hay productos por debajo de su compra mínima.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
   })
 })

@@ -12,7 +12,7 @@ import { formatPrice, roundCurrency } from '@/lib/format'
 import { createId } from '@/lib/id'
 import { TurnstileWidget } from '@/lib/turnstile'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
-import { clearCart, selectCartItems, selectCartSubtotal } from '@/store/cartSlice'
+import { clearCart, selectCartItems, selectCartItemsBelowMinQuantity, selectCartSubtotal } from '@/store/cartSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
   selectStorefrontName,
@@ -118,6 +118,7 @@ export function CheckoutPage() {
   const tenantId = useAppSelector(selectStorefrontTenantId)
   const storeName = useAppSelector(selectStorefrontName)
   const items = useAppSelector(selectCartItems)
+  const belowMinItems = useAppSelector(selectCartItemsBelowMinQuantity)
   const subtotal = useAppSelector(selectCartSubtotal)
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -195,6 +196,9 @@ export function CheckoutPage() {
     options?.shippingMethods.find((method) => method.code === shippingMethod) ?? null
   const shippingCost = selectedShipping?.cost ?? 0
   const total = roundCurrency(subtotal + shippingCost)
+  const minOrderAmount = options?.minOrderAmount ?? 0
+  const belowMinAmount = minOrderAmount > 0 && subtotal < minOrderAmount
+  const meetsMinimum = belowMinItems.length === 0 && !belowMinAmount
 
   const updateField =
     (field: keyof CheckoutFormState) => (value: string) => {
@@ -210,6 +214,16 @@ export function CheckoutPage() {
     setStockConflict(false)
 
     if (!tenantId || !options || items.length === 0) return
+
+    if (belowMinItems.length > 0) {
+      setSubmitError('Hay productos por debajo de su compra mínima.')
+      return
+    }
+
+    if (belowMinAmount) {
+      setSubmitError(`El pedido mínimo es ${formatPrice(minOrderAmount)}.`)
+      return
+    }
 
     if (!paymentMethod || !shippingMethod) {
       setSubmitError('Selecciona un método de pago y uno de envío.')
@@ -560,10 +574,21 @@ export function CheckoutPage() {
               ) : null}
             </div>
 
+            {!meetsMinimum ? (
+              <div className={styles.alert} role="alert">
+                {belowMinItems.length > 0 ? (
+                  <p>Hay productos por debajo de su compra mínima.</p>
+                ) : null}
+                {belowMinAmount ? (
+                  <p>El pedido mínimo es {formatPrice(minOrderAmount)}.</p>
+                ) : null}
+              </div>
+            ) : null}
+
             <button
               type="submit"
               className={styles.primaryAction}
-              disabled={saving || items.length === 0}
+              disabled={saving || items.length === 0 || !meetsMinimum}
             >
               {saving ? 'Procesando…' : 'Confirmar pedido'}
             </button>

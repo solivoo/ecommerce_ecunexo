@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { getCheckoutOptions } from '@/api/checkoutApi'
 import { PriceTag } from '@/features/catalog/components/PriceTag'
 import { formatPrice } from '@/lib/format'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -7,9 +8,11 @@ import {
   CART_MAX_QUANTITY,
   removeItem,
   selectCartItems,
+  selectCartItemsBelowMinQuantity,
   selectCartSubtotal,
   setQuantity,
 } from '@/store/cartSlice'
+import { selectStorefrontTenantId } from '@/store/storefrontSlice'
 import { closeCartDrawer, selectCartDrawerOpen } from '@/store/uiSlice'
 import styles from './CartDrawer.module.css'
 
@@ -17,9 +20,32 @@ export function CartDrawer() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const open = useAppSelector(selectCartDrawerOpen)
+  const tenantId = useAppSelector(selectStorefrontTenantId)
   const items = useAppSelector(selectCartItems)
+  const belowMinItems = useAppSelector(selectCartItemsBelowMinQuantity)
   const subtotal = useAppSelector(selectCartSubtotal)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const [minOrderAmount, setMinOrderAmount] = useState(0)
+
+  useEffect(() => {
+    if (!open || !tenantId) {
+      setMinOrderAmount(0)
+      return
+    }
+
+    let cancelled = false
+    getCheckoutOptions(tenantId)
+      .then((options) => {
+        if (!cancelled) setMinOrderAmount(options.minOrderAmount ?? 0)
+      })
+      .catch(() => {
+        if (!cancelled) setMinOrderAmount(0)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [open, tenantId])
 
   useEffect(() => {
     if (!open) return
@@ -52,6 +78,10 @@ export function CartDrawer() {
     dispatch(closeCartDrawer())
     navigate('/checkout')
   }
+
+  const belowMinAmount = minOrderAmount > 0 && subtotal < minOrderAmount
+  const canCheckout =
+    items.length > 0 && belowMinItems.length === 0 && !belowMinAmount
 
   return (
     <div className={styles.layer}>
@@ -109,7 +139,7 @@ export function CartDrawer() {
                       <button
                         type="button"
                         aria-label={`Quitar una unidad de ${item.name}`}
-                        disabled={item.quantity <= 1}
+                        disabled={item.quantity <= (item.minOrderQuantity ?? 1)}
                         onClick={() =>
                           dispatch(
                             setQuantity({
@@ -154,6 +184,11 @@ export function CartDrawer() {
                   >
                     Quitar
                   </button>
+                  {item.quantity < (item.minOrderQuantity ?? 1) ? (
+                    <p className={styles.minWarning}>
+                      Mínimo {item.minOrderQuantity ?? 1} por producto.
+                    </p>
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -165,10 +200,20 @@ export function CartDrawer() {
             <span>Subtotal</span>
             <strong>{formatPrice(subtotal)}</strong>
           </p>
+          {belowMinItems.length > 0 ? (
+            <p className={styles.minWarning} role="alert">
+              Hay productos por debajo de su compra mínima.
+            </p>
+          ) : null}
+          {belowMinAmount ? (
+            <p className={styles.minWarning} role="alert">
+              El pedido mínimo es {formatPrice(minOrderAmount)}.
+            </p>
+          ) : null}
           <button
             type="button"
             className={styles.checkout}
-            disabled={items.length === 0}
+            disabled={!canCheckout}
             onClick={goToCheckout}
           >
             Ir a pagar

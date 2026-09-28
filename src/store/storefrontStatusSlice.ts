@@ -10,6 +10,9 @@ export const REVISION_STORAGE_KEY = 'storefront.catalogRevision'
 const STABLE_CHECKS_TO_RELOAD = 2
 
 export interface StorefrontStatusState {
+  /** Tienda en mantenimiento: la SPA muestra pantalla de mantenimiento y no permite comprar. */
+  maintenanceEnabled: boolean
+  maintenanceMessage: string
   /** Revisión con la que se renderizó el contenido que ve el visitante. */
   appliedRevision: string | null
   /** Revisión nueva detectada, a la espera de estabilizarse. */
@@ -106,6 +109,8 @@ export function resolveStatusTransition(
 }
 
 const initialState: StorefrontStatusState = {
+  maintenanceEnabled: false,
+  maintenanceMessage: '',
   appliedRevision: readStoredRevision(),
   pendingRevision: null,
   stableChecks: 0,
@@ -147,6 +152,9 @@ const slice = createSlice({
         const payload = action.payload
         if (!payload) return
 
+        state.maintenanceEnabled = payload.maintenanceEnabled ?? false
+        state.maintenanceMessage = payload.maintenanceMessage ?? ''
+
         const transition = resolveStatusTransition(state, payload.revision)
         state.appliedRevision = transition.appliedRevision
         state.pendingRevision = transition.pendingRevision
@@ -173,3 +181,9 @@ export const selectStorefrontIsUpdating = (state: StorefrontStatusRootState): bo
 
 export const selectStorefrontShouldReload = (state: StorefrontStatusRootState): boolean =>
   state.storefrontStatus.shouldReload
+
+export const selectStorefrontMaintenanceEnabled = (state: StorefrontStatusRootState): boolean =>
+  state.storefrontStatus.maintenanceEnabled
+
+export const selectStorefrontMaintenanceMessage = (state: StorefrontStatusRootState): string =>
+  state.storefrontStatus.maintenanceMessage

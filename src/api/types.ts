@@ -32,6 +32,8 @@ export interface StorefrontConfig {
 export interface StorefrontStatus {
   revision: string
   updatedAt: string | null
+  maintenanceEnabled?: boolean
+  maintenanceMessage?: string | null
 }
 
 export interface CatalogQuery {

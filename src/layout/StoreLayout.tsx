@@ -13,6 +13,11 @@ import {
   selectStorefrontError,
   selectStorefrontStatus,
 } from '@/store/storefrontSlice'
+import {
+  checkStorefrontStatus,
+  selectStorefrontMaintenanceEnabled,
+  selectStorefrontMaintenanceMessage,
+} from '@/store/storefrontStatusSlice'
 import { StoreFooter } from './StoreFooter'
 import { StoreHeader } from './StoreHeader'
 import styles from './StoreLayout.module.css'
@@ -22,9 +27,12 @@ export function StoreLayout() {
   const config = useAppSelector(selectStorefrontConfig)
   const status = useAppSelector(selectStorefrontStatus)
   const error = useAppSelector(selectStorefrontError)
+  const maintenanceEnabled = useAppSelector(selectStorefrontMaintenanceEnabled)
+  const maintenanceMessage = useAppSelector(selectStorefrontMaintenanceMessage)
 
   useEffect(() => {
     dispatch(bootstrapStorefront())
+    void dispatch(checkStorefrontStatus())
   }, [dispatch])
 
   useEffect(() => {
@@ -38,6 +46,22 @@ export function StoreLayout() {
         : letterFavicon(config.name, config.primaryColorHex),
     )
   }, [config])
+
+  if (maintenanceEnabled) {
+    return (
+      <div className={styles.splash}>
+        <GlobalStatus />
+        <div className={styles.splashContent}>
+          <p className={styles.splashBrand}>{config?.name ?? STORE_NAME}</p>
+          <h1 className={styles.splashTitle}>Estamos en mantenimiento</h1>
+          <p className={styles.splashText}>
+            {maintenanceMessage ||
+              'Estamos actualizando la tienda para mejorar tu experiencia. Volvemos pronto.'}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   if (!config) {
     return (

@@ -117,10 +117,11 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
     ? selectedVariant.discountPercent ?? null
     : product.discountPercent ?? null
   const displaySku = selectedVariant?.sku ?? product.sku
-  const maxQuantity = Math.min(
-    CART_MAX_QUANTITY,
-    Math.max(0, Math.floor(quantityAvailable)),
-  )
+  const maxQuantity = !isAvailable
+    ? 0
+    : quantityAvailable > 0
+      ? Math.min(CART_MAX_QUANTITY, Math.max(0, Math.floor(quantityAvailable)))
+      : CART_MAX_QUANTITY
   const productMinQuantity = Math.max(1, Math.trunc(product.minOrderQuantity ?? 1))
   const minQuantity = selectedVariant
     ? Math.max(1, Math.trunc(selectedVariant.minOrderQuantity ?? productMinQuantity))

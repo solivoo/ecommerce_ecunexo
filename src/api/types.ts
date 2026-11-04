@@ -9,12 +9,18 @@ export type CatalogSort =
   | 'likes'
 
 export const STOREFRONT_FACET_KEYS = [
+  'categoria',
+  'subcategoria',
+  'marca',
   'talla',
   'color',
+  'presentacion',
+  'capacidad',
+  'material',
+  'modelo',
+  'genero',
   'actividad',
   'cana',
-  'material',
-  'marca',
   'coleccion',
 ] as const
 
@@ -41,12 +47,18 @@ export interface CatalogQuery {
   sort?: CatalogSort
   page?: number
   pageSize?: number
+  categoria?: string[]
+  subcategoria?: string[]
+  marca?: string[]
   talla?: string[]
   color?: string[]
+  presentacion?: string[]
+  capacidad?: string[]
+  material?: string[]
+  modelo?: string[]
+  genero?: string[]
   actividad?: string[]
   cana?: string[]
-  material?: string[]
-  marca?: string[]
   coleccion?: string[]
   priceMin?: number
   priceMax?: number

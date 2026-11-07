@@ -205,7 +205,7 @@ describe('ProductDetailPage', () => {
     await screen.findByRole('heading', { name: 'Calcetín Runner' })
     expect(screen.getByText('SKU: NIK002')).toBeInTheDocument()
     expect(screen.getByText('Nike')).toBeInTheDocument()
-    expect(screen.getByText('#EAB308')).toBeInTheDocument()
+    expect(screen.getByText('Amarillo')).toBeInTheDocument()
   })
 
   it('muestra el estado no disponible', async () => {

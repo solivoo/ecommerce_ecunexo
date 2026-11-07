@@ -123,8 +123,8 @@ export function ProductCard({ product }: ProductCardProps) {
             discountPercent={product.discountPercent}
           />
           {product.hasVariants ? (
-            <Link to={`/producto/${product.id}`} className={styles.ctaSecondary}>
-              Elegir opciones
+            <Link to={`/producto/${product.id}`} className={styles.cta}>
+              Comprar
             </Link>
           ) : product.inStock ? (
             <button
@@ -133,7 +133,7 @@ export function ProductCard({ product }: ProductCardProps) {
               disabled={!canAdd}
               onClick={handleAdd}
             >
-              {added ? 'Agregado ✓' : 'Agregar'}
+              {added ? 'Agregado ✓' : 'Comprar'}
             </button>
           ) : (
             <button type="button" className={styles.cta} disabled>

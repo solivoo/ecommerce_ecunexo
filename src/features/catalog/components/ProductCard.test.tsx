@@ -118,7 +118,7 @@ describe('ProductCard', () => {
   it('agrega al carrito los productos simples disponibles', async () => {
     const { store } = renderCard()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Agregar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Comprar' }))
 
     expect(store.getState().cart.items).toEqual([
       {
@@ -135,12 +135,12 @@ describe('ProductCard', () => {
     ])
   })
 
-  it('muestra Elegir opciones con enlace a la ficha cuando hay variantes', () => {
+  it('muestra Comprar con enlace a la ficha cuando hay variantes', () => {
     renderCard({ ...product, hasVariants: true, variantCount: 3, price: null })
 
-    const cta = screen.getByRole('link', { name: 'Elegir opciones' })
+    const cta = screen.getByRole('link', { name: 'Comprar' })
     expect(cta).toHaveAttribute('href', '/producto/p1')
-    expect(screen.queryByRole('button', { name: 'Agregar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Comprar' })).not.toBeInTheDocument()
   })
 
   it('deshabilita la compra cuando el producto está agotado', async () => {

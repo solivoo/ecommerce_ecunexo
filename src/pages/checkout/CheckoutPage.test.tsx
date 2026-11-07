@@ -13,12 +13,18 @@ import { CheckoutPage } from './CheckoutPage'
 
 vi.mock('@/api/checkoutApi', () => ({
   getCheckoutOptions: vi.fn(),
+  calculateStorefrontQuote: vi.fn(),
   createStorefrontOrder: vi.fn(),
 }))
 
-import { createStorefrontOrder, getCheckoutOptions } from '@/api/checkoutApi'
+import {
+  calculateStorefrontQuote,
+  createStorefrontOrder,
+  getCheckoutOptions,
+} from '@/api/checkoutApi'
 
 const mockedGetOptions = vi.mocked(getCheckoutOptions)
+const mockedCalculateQuote = vi.mocked(calculateStorefrontQuote)
 const mockedCreateOrder = vi.mocked(createStorefrontOrder)
 
 const options: CheckoutOptions = {
@@ -326,5 +332,46 @@ describe('CheckoutPage', () => {
       screen.getByText('Hay productos por debajo de su compra mínima.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
+  })
+
+  it('desglosa IVA incluido y permite aplicar un código promocional', async () => {
+    mockedCalculateQuote.mockResolvedValue({
+      items: [],
+      grossSubtotal: 6,
+      promotionDiscountAmount: 0,
+      couponDiscountAmount: 0.6,
+      discountAmount: 0.6,
+      subtotal: 4.7,
+      taxRate: 0.15,
+      taxAmount: 0.7,
+      pricesIncludeTax: true,
+      shippingCost: 0,
+      totalAmount: 5.4,
+      couponCode: 'EVERCHIC10',
+      couponApplied: true,
+      couponMessage: 'Código EVERCHIC10 aplicado.',
+    })
+
+    renderPage([
+      {
+        catalogItemId: 'p1',
+        name: 'Calcetín Adidas clásico',
+        sku: 'ADID-1',
+        price: 3,
+        quantity: 2,
+        thumbUrl: null,
+      },
+    ])
+
+    await screen.findByText('Transferencia bancaria')
+
+    const couponInput = screen.getByLabelText('Código promocional')
+    await userEvent.type(couponInput, 'everchic10')
+    await userEvent.click(screen.getByRole('button', { name: 'Aplicar' }))
+
+    expect(await screen.findByText('Código EVERCHIC10 aplicado.')).toBeInTheDocument()
+    expect(screen.getByText('Subtotal (sin IVA)')).toBeInTheDocument()
+    expect(screen.getByText('IVA (15% incluido)')).toBeInTheDocument()
+    expect(screen.getByText(`-${formatPrice(0.6)}`)).toBeInTheDocument()
   })
 })

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
+import * as checkoutApi from '@/api/checkoutApi'
 import { createStorefrontOrder, getCheckoutOptions } from '@/api/checkoutApi'
 import { normalizeApiError } from '@/api/errors'
 import { PriceTag } from '@/features/catalog/components/PriceTag'
 import type {
   CheckoutOptions,
   CreateStorefrontOrderInput,
+  StorefrontCheckoutQuote,
   StorefrontOrderResult,
 } from '@/api/types'
 import { formatPrice, roundCurrency } from '@/lib/format'
@@ -145,6 +147,14 @@ export function CheckoutPage() {
   const [stockConflict, setStockConflict] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [turnstileResetSignal, setTurnstileResetSignal] = useState(0)
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null)
+  const [quote, setQuote] = useState<StorefrontCheckoutQuote | null>(null)
+  const [quoteLoading, setQuoteLoading] = useState(false)
+  const [couponFeedback, setCouponFeedback] = useState<{
+    tone: 'success' | 'error'
+    message: string
+  } | null>(null)
   const requestIdRef = useRef<string | null>(null)
 
   useDocumentTitle(`Checkout · ${storeName}`)
@@ -195,10 +205,100 @@ export function CheckoutPage() {
   const selectedShipping =
     options?.shippingMethods.find((method) => method.code === shippingMethod) ?? null
   const shippingCost = selectedShipping?.cost ?? 0
-  const total = roundCurrency(subtotal + shippingCost)
+
+  useEffect(() => {
+    if (!tenantId || items.length === 0) return
+    if (typeof checkoutApi.calculateStorefrontQuote !== 'function') return
+
+    const controller = new AbortController()
+    const quotePromise = checkoutApi.calculateStorefrontQuote(
+      tenantId,
+      {
+        items: items.map((item) => ({
+          catalogItemId: item.catalogItemId,
+          quantity: item.quantity,
+        })),
+        shippingMethod: shippingMethod || null,
+        couponCode: appliedCoupon,
+      },
+      controller.signal,
+    )
+
+    if (!quotePromise || typeof quotePromise.then !== 'function') {
+      return () => controller.abort()
+    }
+
+    setQuoteLoading(true)
+    quotePromise
+      .then((data) => {
+        if (controller.signal.aborted || !data) return
+        setQuote(data)
+        if (appliedCoupon) {
+          if (data.couponApplied) {
+            setCouponFeedback({
+              tone: 'success',
+              message: data.couponMessage ?? `Código ${data.couponCode ?? appliedCoupon} aplicado.`,
+            })
+          } else {
+            setCouponFeedback({
+              tone: 'error',
+              message: data.couponMessage ?? 'El código promocional no es válido.',
+            })
+            setAppliedCoupon(null)
+          }
+        }
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setQuoteLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [tenantId, items, shippingMethod, appliedCoupon])
+
+  const localGrossSubtotal = roundCurrency(
+    items.reduce(
+      (acc, item) => acc + (item.originalPrice ?? item.price) * item.quantity,
+      0,
+    ),
+  )
+  const localAutoDiscount = Math.max(0, roundCurrency(localGrossSubtotal - subtotal))
+  const grossSubtotal = quote ? quote.grossSubtotal : localGrossSubtotal
+  const promotionDiscount = quote ? quote.promotionDiscountAmount : localAutoDiscount
+  const couponDiscount = quote ? quote.couponDiscountAmount : 0
+  const taxRate = quote?.taxRate ?? options?.taxRate ?? 0.15
+  const taxPercentLabel = Math.round(taxRate * 100)
+  const netItemsWithTax = quote
+    ? roundCurrency(quote.subtotal + quote.taxAmount)
+    : subtotal
+  const subtotalExTax = quote
+    ? quote.subtotal
+    : roundCurrency(netItemsWithTax / (1 + taxRate))
+  const taxAmount = quote
+    ? quote.taxAmount
+    : roundCurrency(netItemsWithTax - subtotalExTax)
+  const total = roundCurrency(subtotalExTax + taxAmount + shippingCost)
   const minOrderAmount = options?.minOrderAmount ?? 0
-  const belowMinAmount = minOrderAmount > 0 && subtotal < minOrderAmount
+  const belowMinAmount = minOrderAmount > 0 && netItemsWithTax < minOrderAmount
   const meetsMinimum = belowMinItems.length === 0 && !belowMinAmount
+
+  const handleApplyCoupon = () => {
+    const clean = couponInput.trim().toUpperCase()
+    if (!clean) {
+      setCouponFeedback({ tone: 'error', message: 'Ingresa un código promocional.' })
+      return
+    }
+    setCouponFeedback(null)
+    setAppliedCoupon(clean)
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponInput('')
+    setCouponFeedback(null)
+  }
 
   const updateField =
     (field: keyof CheckoutFormState) => (value: string) => {
@@ -268,6 +368,7 @@ export function CheckoutPage() {
       formElapsedMs: elapsedMsSince(startedAtRef.current),
       turnstileToken: turnstileToken ?? null,
       acceptPrivacyPolicy: true,
+      couponCode: quote?.couponApplied ? (quote.couponCode ?? appliedCoupon) : appliedCoupon,
     }
 
     setSaving(true)
@@ -475,26 +576,124 @@ export function CheckoutPage() {
           <aside className={styles.summary} aria-label="Resumen del pedido">
             <h2 className={styles.summaryTitle}>Resumen</h2>
             <ul className={styles.summaryItems}>
-              {items.map((item) => (
-                <li key={item.catalogItemId} className={styles.summaryItem}>
-                  <span className={styles.summaryItemName}>
-                    {item.name} × {item.quantity}
-                  </span>
-                  <PriceTag
-                    size="sm"
-                    price={item.price * item.quantity}
-                    originalPrice={
-                      item.originalPrice ? item.originalPrice * item.quantity : null
-                    }
-                    discountPercent={item.discountPercent}
-                  />
-                </li>
-              ))}
+              {items.map((item) => {
+                const quoteLine = quote?.items.find(
+                  (line) => line.catalogItemId === item.catalogItemId,
+                )
+                const linePrice = quoteLine ? quoteLine.lineTotal : item.price * item.quantity
+                const lineOriginal = quoteLine
+                  ? quoteLine.lineDiscount > 0
+                    ? quoteLine.lineGross
+                    : null
+                  : item.originalPrice
+                    ? item.originalPrice * item.quantity
+                    : null
+                const lineDiscountPercent = quoteLine
+                  ? (quoteLine.discountPercent ?? null)
+                  : item.discountPercent
+
+                return (
+                  <li key={item.catalogItemId} className={styles.summaryItem}>
+                    <span className={styles.summaryItemName}>
+                      {item.name} × {item.quantity}
+                    </span>
+                    <PriceTag
+                      size="sm"
+                      price={linePrice}
+                      originalPrice={lineOriginal}
+                      discountPercent={lineDiscountPercent}
+                    />
+                  </li>
+                )
+              })}
             </ul>
+
+            <div className={styles.couponBox}>
+              <label htmlFor="checkout-coupon" className={styles.couponLabel}>
+                Código promocional
+              </label>
+              {quote?.couponApplied && appliedCoupon ? (
+                <div className={styles.couponActive}>
+                  <span className={styles.couponBadge}>
+                    Cupón <strong>{quote.couponCode ?? appliedCoupon}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.couponRemove}
+                    onClick={handleRemoveCoupon}
+                  >
+                    Quitar
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.couponRow}>
+                  <input
+                    id="checkout-coupon"
+                    type="text"
+                    className={styles.couponInput}
+                    placeholder="Ej. BIENVENIDA10"
+                    value={couponInput}
+                    disabled={quoteLoading || saving}
+                    onChange={(event) => {
+                      setCouponInput(event.target.value.toUpperCase())
+                      if (couponFeedback) setCouponFeedback(null)
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault()
+                        handleApplyCoupon()
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className={styles.couponButton}
+                    disabled={quoteLoading || saving || !couponInput.trim()}
+                    onClick={handleApplyCoupon}
+                  >
+                    {quoteLoading ? '...' : 'Aplicar'}
+                  </button>
+                </div>
+              )}
+              {couponFeedback ? (
+                <p
+                  className={
+                    couponFeedback.tone === 'success'
+                      ? styles.couponSuccess
+                      : styles.couponError
+                  }
+                >
+                  {couponFeedback.message}
+                </p>
+              ) : null}
+            </div>
+
             <dl className={styles.totals}>
+              {promotionDiscount > 0 || couponDiscount > 0 ? (
+                <div className={styles.totalRow}>
+                  <dt>Subtotal productos</dt>
+                  <dd>{formatPrice(grossSubtotal)}</dd>
+                </div>
+              ) : null}
+              {promotionDiscount > 0 ? (
+                <div className={`${styles.totalRow} ${styles.discountRow}`}>
+                  <dt>Descuento promocional</dt>
+                  <dd>-{formatPrice(promotionDiscount)}</dd>
+                </div>
+              ) : null}
+              {couponDiscount > 0 ? (
+                <div className={`${styles.totalRow} ${styles.discountRow}`}>
+                  <dt>Cupón ({quote?.couponCode ?? appliedCoupon})</dt>
+                  <dd>-{formatPrice(couponDiscount)}</dd>
+                </div>
+              ) : null}
               <div className={styles.totalRow}>
-                <dt>Subtotal</dt>
-                <dd>{formatPrice(subtotal)}</dd>
+                <dt>Subtotal (sin IVA)</dt>
+                <dd>{formatPrice(subtotalExTax)}</dd>
+              </div>
+              <div className={styles.totalRow}>
+                <dt>IVA ({taxPercentLabel}% incluido)</dt>
+                <dd>{formatPrice(taxAmount)}</dd>
               </div>
               <div className={styles.totalRow}>
                 <dt>Envío</dt>

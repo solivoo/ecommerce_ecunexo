@@ -100,20 +100,26 @@ export function OrderConfirmedPage() {
         </p>
 
         <dl className={styles.totals}>
+          {order.discountAmount && order.discountAmount > 0 ? (
+            <div className={styles.totalRow}>
+              <dt>Descuento</dt>
+              <dd>-{formatPrice(order.discountAmount)}</dd>
+            </div>
+          ) : null}
           <div className={styles.totalRow}>
-            <dt>Subtotal</dt>
+            <dt>{order.taxAmount > 0 ? 'Subtotal (sin IVA)' : 'Subtotal'}</dt>
             <dd>{formatPrice(order.subtotal)}</dd>
           </div>
+          {order.taxAmount > 0 ? (
+            <div className={styles.totalRow}>
+              <dt>IVA (15% incluido)</dt>
+              <dd>{formatPrice(order.taxAmount)}</dd>
+            </div>
+          ) : null}
           <div className={styles.totalRow}>
             <dt>Envío</dt>
             <dd>{formatPrice(order.shippingCost)}</dd>
           </div>
-          {order.taxAmount > 0 ? (
-            <div className={styles.totalRow}>
-              <dt>Impuesto</dt>
-              <dd>{formatPrice(order.taxAmount)}</dd>
-            </div>
-          ) : null}
           <div className={`${styles.totalRow} ${styles.grandTotal}`}>
             <dt>Total</dt>
             <dd>{formatPrice(order.totalAmount)}</dd>

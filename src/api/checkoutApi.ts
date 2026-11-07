@@ -1,8 +1,10 @@
 import { api } from './client'
 import type {
+  CalculateStorefrontQuoteInput,
   CheckoutOptions,
   CreateStorefrontOrderInput,
   PaymentProofUploadResult,
+  StorefrontCheckoutQuote,
   StorefrontOrderResult,
 } from './types'
 
@@ -29,7 +31,22 @@ export async function getCheckoutOptions(
     whatsappPhone: data.whatsappPhone ?? null,
     turnstileSiteKey: data.turnstileSiteKey ?? null,
     minOrderAmount: data.minOrderAmount ?? null,
+    taxRate: data.taxRate ?? 0.15,
+    pricesIncludeTax: data.pricesIncludeTax ?? true,
   }
+}
+
+export async function calculateStorefrontQuote(
+  tenantId: string,
+  input: CalculateStorefrontQuoteInput,
+  signal?: AbortSignal,
+): Promise<StorefrontCheckoutQuote> {
+  const response = await api.post<StorefrontCheckoutQuote>(
+    storefrontUrl(tenantId, '/checkout-quote'),
+    input,
+    { signal },
+  )
+  return response.data
 }
 
 export async function createStorefrontOrder(

@@ -210,6 +210,46 @@ export interface CheckoutOptions {
   turnstileSiteKey?: string | null
   /** Monto mínimo del pedido; null/ausente o 0 = sin mínimo. */
   minOrderAmount?: number | null
+  /** Tasa de IVA vigente (ej. 0.15 para 15%). */
+  taxRate?: number
+  /** True cuando los precios de catálogo ya incluyen IVA. */
+  pricesIncludeTax?: boolean
+}
+
+export interface CalculateStorefrontQuoteInput {
+  items: CreateStorefrontOrderItemInput[]
+  shippingMethod?: string | null
+  couponCode?: string | null
+}
+
+export interface StorefrontCheckoutQuoteLine {
+  catalogItemId: string
+  quantity: number
+  listUnitPrice: number
+  effectiveUnitPrice: number
+  lineGross: number
+  lineDiscount: number
+  lineSubtotalExTax: number
+  lineTaxAmount: number
+  lineTotal: number
+  discountPercent?: number | null
+}
+
+export interface StorefrontCheckoutQuote {
+  items: StorefrontCheckoutQuoteLine[]
+  grossSubtotal: number
+  promotionDiscountAmount: number
+  couponDiscountAmount: number
+  discountAmount: number
+  subtotal: number
+  taxRate: number
+  taxAmount: number
+  pricesIncludeTax: boolean
+  shippingCost: number
+  totalAmount: number
+  couponCode?: string | null
+  couponApplied: boolean
+  couponMessage?: string | null
 }
 
 export interface CreateStorefrontOrderCustomerInput {
@@ -246,6 +286,8 @@ export interface CreateStorefrontOrderInput {
   turnstileToken?: string | null
   /** El comprador aceptó la política de tratamiento de datos personales. */
   acceptPrivacyPolicy: boolean
+  /** Código promocional / cupón aplicado en el checkout. */
+  couponCode?: string | null
 }
 
 export interface StorefrontOrderResult {
@@ -260,6 +302,7 @@ export interface StorefrontOrderResult {
   paymentInstructions: string | null
   /** Token secreto para autorizar la subida del comprobante de pago. */
   paymentProofToken: string
+  discountAmount?: number
 }
 
 export interface PaymentProofUploadResult {

@@ -29,7 +29,6 @@ export function CartDrawer() {
 
   useEffect(() => {
     if (!open || !tenantId) {
-      setMinOrderAmount(0)
       return
     }
 

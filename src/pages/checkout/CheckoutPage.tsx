@@ -186,10 +186,6 @@ export function CheckoutPage() {
     setOptionsReloadKey((key) => key + 1)
   }
 
-  if (items.length === 0 && !placed) {
-    return <Navigate to="/" replace />
-  }
-
   const paymentMethod = options?.paymentMethods.some(
     (method) => method.code === paymentChoice,
   )
@@ -228,8 +224,11 @@ export function CheckoutPage() {
       return () => controller.abort()
     }
 
-    setQuoteLoading(true)
-    quotePromise
+    Promise.resolve()
+      .then(() => {
+        if (!controller.signal.aborted) setQuoteLoading(true)
+        return quotePromise
+      })
       .then((data) => {
         if (controller.signal.aborted || !data) return
         setQuote(data)
@@ -257,6 +256,10 @@ export function CheckoutPage() {
 
     return () => controller.abort()
   }, [tenantId, items, shippingMethod, appliedCoupon])
+
+  if (items.length === 0 && !placed) {
+    return <Navigate to="/" replace />
+  }
 
   const localGrossSubtotal = roundCurrency(
     items.reduce(

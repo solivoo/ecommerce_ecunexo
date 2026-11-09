@@ -295,4 +295,19 @@ describe('ProductDetailPage', () => {
     expect(await screen.findByRole('button', { name: 'Quitar me gusta' })).toHaveTextContent('5')
     expect(mockedLike).toHaveBeenCalledWith('tenant-1', 'p1', expect.any(String))
   })
+
+  it('permite ampliar y restablecer el zoom de la imagen del producto sin afectar la página', async () => {
+    mockedGetProduct.mockResolvedValue(detail)
+
+    renderPage()
+
+    const image = await screen.findByAltText('Calcetín Runner')
+    expect(image).toHaveStyle({ transform: 'translate3d(0px, 0px, 0) scale(1)' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ampliar imagen' }))
+    expect(image).toHaveStyle({ transform: 'translate3d(0px, 0px, 0) scale(2)' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Restablecer zoom' }))
+    expect(image).toHaveStyle({ transform: 'translate3d(0px, 0px, 0) scale(1)' })
+  })
 })

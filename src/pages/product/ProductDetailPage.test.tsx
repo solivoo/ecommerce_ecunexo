@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -309,5 +309,55 @@ describe('ProductDetailPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Restablecer zoom' }))
     expect(image).toHaveStyle({ transform: 'translate3d(0px, 0px, 0) scale(1)' })
+  })
+
+  it('permite desplazar la imagen ampliada con el mouse', async () => {
+    mockedGetProduct.mockResolvedValue(detail)
+
+    renderPage()
+
+    const image = await screen.findByAltText('Calcetín Runner')
+    await userEvent.click(screen.getByRole('button', { name: 'Ampliar imagen' }))
+    expect(image).toHaveStyle({ transform: 'translate3d(0px, 0px, 0) scale(2)' })
+
+    const stage = image.parentElement
+    expect(stage).not.toBeNull()
+    Object.defineProperty(stage, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ width: 320, height: 320, top: 0, left: 0, right: 320, bottom: 320, x: 0, y: 0, toJSON: () => ({}) }),
+    })
+
+    stage!.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        clientX: 160,
+        clientY: 160,
+        button: 0,
+        pointerId: 1,
+        pointerType: 'mouse',
+      }),
+    )
+    stage!.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        clientX: 100,
+        clientY: 120,
+        pointerId: 1,
+        pointerType: 'mouse',
+      }),
+    )
+    stage!.dispatchEvent(
+      new PointerEvent('pointerup', {
+        bubbles: true,
+        clientX: 100,
+        clientY: 120,
+        pointerId: 1,
+        pointerType: 'mouse',
+      }),
+    )
+
+    await waitFor(() => {
+      expect(image).toHaveStyle({ transform: 'translate3d(-60px, -40px, 0) scale(2)' })
+    })
   })
 })

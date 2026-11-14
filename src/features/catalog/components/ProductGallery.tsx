@@ -191,16 +191,72 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       }
     }
 
+    const handlePointerDown = (event: PointerEvent) => {
+      // El pan táctil ya va por TouchEvent; aquí mouse/stylus.
+      if (event.pointerType === 'touch') return
+      // button puede faltar en algunos entornos de test; solo bloquear clic derecho/medio.
+      if (event.button === 1 || event.button === 2) return
+      if (stateRef.current.scale <= 1) return
+      const target = event.target as HTMLElement | null
+      if (target?.closest(`.${styles.zoomControls}`)) return
+
+      const g = gestureRef.current
+      g.mode = 'pan'
+      g.startX = event.clientX
+      g.startY = event.clientY
+      g.originX = stateRef.current.x
+      g.originY = stateRef.current.y
+      g.moved = false
+      setIsInteracting(true)
+      element.setPointerCapture?.(event.pointerId)
+    }
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return
+      const g = gestureRef.current
+      if (g.mode !== 'pan' || stateRef.current.scale <= 1) return
+      event.preventDefault()
+      const dx = event.clientX - g.startX
+      const dy = event.clientY - g.startY
+      if (Math.hypot(dx, dy) > 4) {
+        g.moved = true
+      }
+      setOffset(clampOffset(stateRef.current.scale, g.originX + dx, g.originY + dy))
+    }
+
+    const handlePointerUp = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return
+      const g = gestureRef.current
+      if (g.mode !== 'pan') return
+      setIsInteracting(false)
+      if (stateRef.current.scale <= 1.08) {
+        setScale(1)
+        setOffset({ x: 0, y: 0 })
+      }
+      g.mode = 'none'
+      if (element.hasPointerCapture?.(event.pointerId)) {
+        element.releasePointerCapture?.(event.pointerId)
+      }
+    }
+
     element.addEventListener('touchstart', handleTouchStart, { passive: false })
     element.addEventListener('touchmove', handleTouchMove, { passive: false })
     element.addEventListener('touchend', handleTouchEnd)
     element.addEventListener('touchcancel', handleTouchEnd)
+    element.addEventListener('pointerdown', handlePointerDown)
+    element.addEventListener('pointermove', handlePointerMove)
+    element.addEventListener('pointerup', handlePointerUp)
+    element.addEventListener('pointercancel', handlePointerUp)
 
     return () => {
       element.removeEventListener('touchstart', handleTouchStart)
       element.removeEventListener('touchmove', handleTouchMove)
       element.removeEventListener('touchend', handleTouchEnd)
       element.removeEventListener('touchcancel', handleTouchEnd)
+      element.removeEventListener('pointerdown', handlePointerDown)
+      element.removeEventListener('pointermove', handlePointerMove)
+      element.removeEventListener('pointerup', handlePointerUp)
+      element.removeEventListener('pointercancel', handlePointerUp)
     }
   }, [clampOffset])
 

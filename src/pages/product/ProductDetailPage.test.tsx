@@ -148,7 +148,7 @@ describe('ProductDetailPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Calcetín Runner' })).toBeInTheDocument()
     expect(screen.getByText('SKU: CALC-NEG-39')).toBeInTheDocument()
-    expect(screen.getByText('2 disponibles')).toBeInTheDocument()
+    expect(screen.getByText('Disponible')).toBeInTheDocument()
     expect(screen.getByText('Marca')).toBeInTheDocument()
     expect(screen.getByText('Nike')).toBeInTheDocument()
     expect(screen.getByAltText('Calcetín Runner')).toHaveAttribute(

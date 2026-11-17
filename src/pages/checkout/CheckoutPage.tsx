@@ -151,6 +151,7 @@ export function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null)
   const [quote, setQuote] = useState<StorefrontCheckoutQuote | null>(null)
   const [quoteLoading, setQuoteLoading] = useState(false)
+  const [quoteError, setQuoteError] = useState<string | null>(null)
   const [couponFeedback, setCouponFeedback] = useState<{
     tone: 'success' | 'error'
     message: string
@@ -232,6 +233,7 @@ export function CheckoutPage() {
       .then((data) => {
         if (controller.signal.aborted || !data) return
         setQuote(data)
+        setQuoteError(null)
         if (appliedCoupon) {
           if (data.couponApplied) {
             setCouponFeedback({
@@ -247,8 +249,9 @@ export function CheckoutPage() {
           }
         }
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         if (controller.signal.aborted) return
+        setQuoteError(err instanceof Error ? err.message : null)
       })
       .finally(() => {
         if (!controller.signal.aborted) setQuoteLoading(false)
@@ -776,7 +779,7 @@ export function CheckoutPage() {
               ) : null}
             </div>
 
-            {!meetsMinimum ? (
+            {!meetsMinimum || quoteError ? (
               <div className={styles.alert} role="alert">
                 {belowMinItems.length > 0 ? (
                   <p>Hay productos por debajo de su compra mínima.</p>
@@ -784,13 +787,14 @@ export function CheckoutPage() {
                 {belowMinAmount ? (
                   <p>El pedido mínimo es {formatPrice(minOrderAmount)}.</p>
                 ) : null}
+                {quoteError ? <p>{quoteError}</p> : null}
               </div>
             ) : null}
 
             <button
               type="submit"
               className={styles.primaryAction}
-              disabled={saving || items.length === 0 || !meetsMinimum}
+              disabled={saving || items.length === 0 || !meetsMinimum || Boolean(quoteError)}
             >
               {saving ? 'Procesando…' : 'Confirmar pedido'}
             </button>

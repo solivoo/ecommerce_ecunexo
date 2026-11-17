@@ -200,6 +200,21 @@
   font-variant-numeric: tabular-nums;
 }
 
+.discountRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--signal-ink, #0f766e);
+  font-weight: 700;
+}
+
+.discountRow strong {
+  font-variant-numeric: tabular-nums;
+}
+
 .minWarning {
   margin: var(--space-2) 0 0;
   font-size: var(--text-xs);

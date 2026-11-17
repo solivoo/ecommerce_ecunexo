@@ -12,7 +12,6 @@ import {
   isHexColor,
   type VariantSelection,
 } from '@/features/catalog/utils/variantSelection'
-import { formatQuantity } from '@/lib/format'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import { CART_MAX_QUANTITY, addItem } from '@/store/cartSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -173,11 +172,7 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
               discountPercent={discountPercent}
             />
             {isAvailable ? (
-              <span className={styles.stockOk}>
-                {quantityAvailable > 0
-                  ? `${formatQuantity(quantityAvailable)} disponibles`
-                  : 'Disponible'}
-              </span>
+              <span className={styles.stockOk}>Disponible</span>
             ) : (
               <span className={styles.stockOut}>Agotado</span>
             )}

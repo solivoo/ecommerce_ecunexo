@@ -12,11 +12,13 @@ import { CartDrawer } from './CartDrawer'
 
 vi.mock('@/api/checkoutApi', () => ({
   getCheckoutOptions: vi.fn(),
+  calculateStorefrontQuote: vi.fn(),
 }))
 
-import { getCheckoutOptions } from '@/api/checkoutApi'
+import { calculateStorefrontQuote, getCheckoutOptions } from '@/api/checkoutApi'
 
 const mockedGetCheckoutOptions = vi.mocked(getCheckoutOptions)
+const mockedCalculateStorefrontQuote = vi.mocked(calculateStorefrontQuote)
 
 const items: CartItem[] = [
   {
@@ -198,5 +200,76 @@ describe('CartDrawer', () => {
 
     const button = screen.getByRole('button', { name: 'Ir a pagar' })
     expect(button).toBeEnabled()
+  })
+
+  it('muestra descuento por paquete/promo y subtotal cotizado por el backend', async () => {
+    mockedGetCheckoutOptions.mockResolvedValue({
+      paymentMethods: [],
+      shippingMethods: [],
+      minOrderAmount: null,
+    })
+    mockedCalculateStorefrontQuote.mockResolvedValue({
+      items: [
+        {
+          catalogItemId: 'p1',
+          quantity: 2,
+          listUnitPrice: 3.5,
+          effectiveUnitPrice: 3,
+          lineGross: 7,
+          lineDiscount: 1,
+          lineSubtotalExTax: 5.22,
+          lineTaxAmount: 0.78,
+          lineTotal: 6,
+          discountPercent: 14,
+        },
+        {
+          catalogItemId: 'p2',
+          quantity: 3,
+          listUnitPrice: 4,
+          effectiveUnitPrice: 3,
+          lineGross: 12,
+          lineDiscount: 3,
+          lineSubtotalExTax: 7.83,
+          lineTaxAmount: 1.17,
+          lineTotal: 9,
+          discountPercent: 25,
+        },
+      ],
+      grossSubtotal: 19,
+      promotionDiscountAmount: 4,
+      couponDiscountAmount: 0,
+      discountAmount: 4,
+      subtotal: 13.05,
+      taxRate: 0.15,
+      taxAmount: 1.95,
+      pricesIncludeTax: true,
+      shippingCost: 0,
+      totalAmount: 15,
+      couponApplied: false,
+    })
+
+    renderDrawer({ withTenant: true })
+
+    expect(await screen.findByText('Descuento paquetes / promo')).toBeInTheDocument()
+    expect(screen.getByText(`-${formatPrice(4)}`)).toBeInTheDocument()
+    expect(screen.getByText(formatPrice(15))).toBeInTheDocument()
+  })
+
+  it('muestra error de mínimo de grupo y bloquea "Ir a pagar" si falla la cotización', async () => {
+    mockedGetCheckoutOptions.mockResolvedValue({
+      paymentMethods: [],
+      shippingMethods: [],
+      minOrderAmount: null,
+    })
+    mockedCalculateStorefrontQuote.mockRejectedValue(
+      new Error('El grupo «Pack Calcetines» requiere una compra mínima de 5 unidades.'),
+    )
+
+    renderDrawer({ withTenant: true })
+
+    expect(
+      await screen.findByText('El grupo «Pack Calcetines» requiere una compra mínima de 5 unidades.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ir a pagar' })).toBeDisabled()
   })
 })

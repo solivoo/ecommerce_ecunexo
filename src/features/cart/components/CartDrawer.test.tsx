@@ -261,9 +261,12 @@ describe('CartDrawer', () => {
       shippingMethods: [],
       minOrderAmount: null,
     })
-    mockedCalculateStorefrontQuote.mockRejectedValue(
-      new Error('El grupo «Pack Calcetines» requiere una compra mínima de 5 unidades.'),
-    )
+    mockedCalculateStorefrontQuote.mockRejectedValue({
+      status: 400,
+      code: 'catalog.pricing.group_min_quantity',
+      message: 'El grupo «Pack Calcetines» requiere una compra mínima de 5 unidades.',
+      detail: 'El grupo «Pack Calcetines» requiere una compra mínima de 5 unidades.',
+    })
 
     renderDrawer({ withTenant: true })
 

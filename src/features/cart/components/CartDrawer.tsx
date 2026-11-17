@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { calculateStorefrontQuote, getCheckoutOptions } from '@/api/checkoutApi'
+import { isApiError } from '@/api/errors'
 import type { StorefrontCheckoutQuote } from '@/api/types'
 import { PriceTag } from '@/features/catalog/components/PriceTag'
 import { formatPrice } from '@/lib/format'
@@ -80,7 +81,12 @@ export function CartDrawer() {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return
         setQuote(null)
-        setQuoteError(err instanceof Error ? err.message : null)
+        const msg = isApiError(err)
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : null
+        setQuoteError(msg)
       })
 
     return () => controller.abort()

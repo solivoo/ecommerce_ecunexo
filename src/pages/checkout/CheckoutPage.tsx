@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import * as checkoutApi from '@/api/checkoutApi'
 import { createStorefrontOrder, getCheckoutOptions } from '@/api/checkoutApi'
-import { normalizeApiError } from '@/api/errors'
+import { isApiError, normalizeApiError } from '@/api/errors'
 import { PriceTag } from '@/features/catalog/components/PriceTag'
 import type {
   CheckoutOptions,
@@ -251,7 +251,12 @@ export function CheckoutPage() {
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return
-        setQuoteError(err instanceof Error ? err.message : null)
+        const msg = isApiError(err)
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : null
+        setQuoteError(msg)
       })
       .finally(() => {
         if (!controller.signal.aborted) setQuoteLoading(false)

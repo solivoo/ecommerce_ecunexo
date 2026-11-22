@@ -78,22 +78,40 @@
 }
 
 .field input,
+.field select,
 .field textarea {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: var(--border-w) solid var(--ink);
   border-radius: var(--radius-sm);
   background-color: var(--paper);
+  font: inherit;
+  color: inherit;
 }
 
 .field input:focus,
+.field select:focus,
 .field textarea:focus {
   outline: 2px solid var(--ink);
   outline-offset: 1px;
 }
 
-.field input[aria-invalid='true'] {
+.field input[aria-invalid='true'],
+.field select[aria-invalid='true'] {
   border-color: var(--alert);
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 600px) {
+  .fieldRow {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 }
 
 .fieldError {
@@ -156,6 +174,28 @@
   font-size: var(--text-sm);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.optionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.optionMeta {
+  font-size: var(--text-xs);
+  color: var(--steel);
+}
+
+.shippingNotice {
+  margin-block-start: var(--space-2);
+  padding: var(--space-3);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background-color: var(--paper);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
 }
 
 .summary {

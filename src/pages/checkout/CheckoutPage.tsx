@@ -7,8 +7,11 @@ import { PriceTag } from '@/features/catalog/components/PriceTag'
 import type {
   CheckoutOptions,
   CreateStorefrontOrderInput,
+  EcuadorCanton,
+  EcuadorProvince,
   StorefrontCheckoutQuote,
   StorefrontOrderResult,
+  StorefrontShippingOption,
 } from '@/api/types'
 import { formatPrice, roundCurrency } from '@/lib/format'
 import { createId } from '@/lib/id'
@@ -32,6 +35,8 @@ interface CheckoutFormState {
   taxId: string
   address: string
   city: string
+  provinceId: string
+  cantonId: string
   reference: string
   notes: string
 }
@@ -45,8 +50,14 @@ const EMPTY_FORM: CheckoutFormState = {
   taxId: '',
   address: '',
   city: '',
+  provinceId: '',
+  cantonId: '',
   reference: '',
   notes: '',
+}
+
+function shippingOptionKey(opt: Pick<StorefrontShippingOption, 'code' | 'shippingMethodId'>): string {
+  return `${opt.code}:${opt.shippingMethodId ?? 'static'}`
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -96,7 +107,10 @@ function clearStoredRequestId(): void {
   } catch { /* ignore */ }
 }
 
-function validateForm(form: CheckoutFormState): CheckoutFormErrors {
+function validateForm(
+  form: CheckoutFormState,
+  dynamicShippingEnabled: boolean,
+): CheckoutFormErrors {
   const errors: CheckoutFormErrors = {}
 
   if (!form.name.trim()) errors.name = 'Ingresa tu nombre.'
@@ -111,7 +125,12 @@ function validateForm(form: CheckoutFormState): CheckoutFormErrors {
     errors.phone = 'Ingresa un teléfono válido.'
   }
   if (!form.address.trim()) errors.address = 'Ingresa tu dirección.'
-  if (!form.city.trim()) errors.city = 'Ingresa tu ciudad.'
+  if (dynamicShippingEnabled) {
+    if (!form.provinceId) errors.provinceId = 'Selecciona tu provincia.'
+    if (!form.cantonId) errors.cantonId = 'Selecciona tu cantón.'
+  } else if (!form.city.trim()) {
+    errors.city = 'Ingresa tu ciudad.'
+  }
 
   return errors
 }
@@ -152,6 +171,13 @@ export function CheckoutPage() {
   const [quote, setQuote] = useState<StorefrontCheckoutQuote | null>(null)
   const [quoteLoading, setQuoteLoading] = useState(false)
   const [quoteError, setQuoteError] = useState<string | null>(null)
+  const [provinces, setProvinces] = useState<EcuadorProvince[]>([])
+  const [provincesLoading, setProvincesLoading] = useState(false)
+  const [cantons, setCantons] = useState<EcuadorCanton[]>([])
+  const [cantonsLoading, setCantonsLoading] = useState(false)
+  const [dynamicShippingOptions, setDynamicShippingOptions] = useState<StorefrontShippingOption[]>([])
+  const [dynamicShippingLoading, setDynamicShippingLoading] = useState(false)
+  const [dynamicShippingError, setDynamicShippingError] = useState<string | null>(null)
   const [couponFeedback, setCouponFeedback] = useState<{
     tone: 'success' | 'error'
     message: string
@@ -187,21 +213,125 @@ export function CheckoutPage() {
     setOptionsReloadKey((key) => key + 1)
   }
 
+  const dynamicShippingEnabled = Boolean(options?.dynamicShippingEnabled)
+
+  useEffect(() => {
+    if (!dynamicShippingEnabled) return
+    if (typeof checkoutApi.listEcuadorProvinces !== 'function') return
+    const controller = new AbortController()
+
+    Promise.resolve()
+      .then(() => {
+        if (!controller.signal.aborted) setProvincesLoading(true)
+        return checkoutApi.listEcuadorProvinces(controller.signal)
+      })
+      .then((data) => {
+        if (!controller.signal.aborted) setProvinces(data)
+      })
+      .catch(() => {
+        // Silencioso; el select queda disponible para reintento si es necesario.
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setProvincesLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [dynamicShippingEnabled])
+
+  useEffect(() => {
+    if (!dynamicShippingEnabled || !form.provinceId) return
+    if (typeof checkoutApi.listEcuadorCantons !== 'function') return
+    const controller = new AbortController()
+
+    Promise.resolve()
+      .then(() => {
+        if (!controller.signal.aborted) setCantonsLoading(true)
+        return checkoutApi.listEcuadorCantons(form.provinceId, controller.signal)
+      })
+      .then((data) => {
+        if (!controller.signal.aborted) setCantons(data)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setCantons([])
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCantonsLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [dynamicShippingEnabled, form.provinceId])
+
+  const itemsSubtotalForShipping = quote
+    ? roundCurrency(quote.subtotal + quote.taxAmount)
+    : subtotal
+
+  useEffect(() => {
+    if (!dynamicShippingEnabled || !tenantId || !form.cantonId) return
+    if (typeof checkoutApi.listStorefrontShippingOptions !== 'function') return
+    const controller = new AbortController()
+
+    Promise.resolve()
+      .then(() => {
+        if (!controller.signal.aborted) {
+          setDynamicShippingLoading(true)
+          setDynamicShippingError(null)
+        }
+        return checkoutApi.listStorefrontShippingOptions(
+          tenantId,
+          form.cantonId,
+          itemsSubtotalForShipping,
+          controller.signal,
+        )
+      })
+      .then((data) => {
+        if (!controller.signal.aborted) setDynamicShippingOptions(data)
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return
+        setDynamicShippingOptions([])
+        setDynamicShippingError(normalizeApiError(error).message)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDynamicShippingLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [dynamicShippingEnabled, tenantId, form.cantonId, itemsSubtotalForShipping])
+
   const paymentMethod = options?.paymentMethods.some(
     (method) => method.code === paymentChoice,
   )
     ? paymentChoice
     : (options?.paymentMethods[0]?.code ?? '')
-  const shippingMethod = options?.shippingMethods.some(
+
+  const selectedDynamicShipping = dynamicShippingEnabled
+    ? (dynamicShippingOptions.find(
+        (opt) => shippingOptionKey(opt) === shippingChoice,
+      ) ?? dynamicShippingOptions[0] ?? null)
+    : null
+
+  const staticShippingMethod = options?.shippingMethods.some(
     (method) => method.code === shippingChoice,
   )
     ? shippingChoice
     : (options?.shippingMethods[0]?.code ?? '')
+
+  const shippingMethod = dynamicShippingEnabled
+    ? (selectedDynamicShipping?.code ?? '')
+    : staticShippingMethod
+  const shippingMethodId = dynamicShippingEnabled
+    ? (selectedDynamicShipping?.shippingMethodId ?? null)
+    : null
+
   const selectedPayment =
     options?.paymentMethods.find((method) => method.code === paymentMethod) ?? null
-  const selectedShipping =
-    options?.shippingMethods.find((method) => method.code === shippingMethod) ?? null
+  const selectedShipping = dynamicShippingEnabled
+    ? selectedDynamicShipping
+    : (options?.shippingMethods.find((method) => method.code === staticShippingMethod) ?? null)
   const shippingCost = selectedShipping?.cost ?? 0
+
+  const selectedProvince = provinces.find((p) => p.id === form.provinceId) ?? null
+  const selectedCanton = cantons.find((c) => c.id === form.cantonId) ?? null
 
   useEffect(() => {
     if (!tenantId || items.length === 0) return
@@ -217,6 +347,12 @@ export function CheckoutPage() {
         })),
         shippingMethod: shippingMethod || null,
         couponCode: appliedCoupon,
+        ...(dynamicShippingEnabled && form.cantonId
+          ? {
+              cantonId: form.cantonId,
+              shippingMethodId,
+            }
+          : {}),
       },
       controller.signal,
     )
@@ -263,7 +399,7 @@ export function CheckoutPage() {
       })
 
     return () => controller.abort()
-  }, [tenantId, items, shippingMethod, appliedCoupon])
+  }, [tenantId, items, shippingMethod, shippingMethodId, form.cantonId, dynamicShippingEnabled, appliedCoupon])
 
   if (items.length === 0 && !placed) {
     return <Navigate to="/" replace />
@@ -336,14 +472,18 @@ export function CheckoutPage() {
       return
     }
 
-    if (!paymentMethod || !shippingMethod) {
-      setSubmitError('Selecciona un método de pago y uno de envío.')
+    const validationErrors = validateForm(form, dynamicShippingEnabled)
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
       return
     }
 
-    const validationErrors = validateForm(form)
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
+    if (!paymentMethod || !shippingMethod) {
+      setSubmitError(
+        dynamicShippingEnabled
+          ? 'Selecciona un método de envío disponible para tu cantón.'
+          : 'Selecciona un método de pago y uno de envío.',
+      )
       return
     }
 
@@ -368,11 +508,21 @@ export function CheckoutPage() {
       },
       shipping: {
         address: form.address.trim(),
-        city: form.city.trim(),
+        city: dynamicShippingEnabled
+          ? (selectedCanton?.name ?? form.city.trim())
+          : form.city.trim(),
         reference: form.reference.trim() ? form.reference.trim() : null,
+        ...(dynamicShippingEnabled
+          ? {
+              province: selectedProvince?.name ?? null,
+              provinceId: form.provinceId || null,
+              cantonId: form.cantonId || null,
+            }
+          : {}),
       },
       paymentMethod,
       shippingMethod,
+      ...(dynamicShippingEnabled ? { shippingMethodId } : {}),
       items: orderItems,
       notes: form.notes.trim() ? form.notes.trim() : null,
       contactFax: contactFax.trim() ? contactFax : null,
@@ -498,6 +648,112 @@ export function CheckoutPage() {
 
             <fieldset className={styles.group}>
               <legend className={styles.legend}>Entrega</legend>
+              {dynamicShippingEnabled ? (
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label htmlFor="checkout-province">Provincia *</label>
+                    <select
+                      id="checkout-province"
+                      value={form.provinceId}
+                      required
+                      disabled={provincesLoading}
+                      aria-invalid={errors.provinceId ? true : undefined}
+                      aria-describedby={errors.provinceId ? 'checkout-province-error' : undefined}
+                      onChange={(event) => {
+                        const nextProvinceId = event.target.value
+                        setForm((current) => ({
+                          ...current,
+                          provinceId: nextProvinceId,
+                          cantonId: '',
+                          city: '',
+                        }))
+                        setCantons([])
+                        setDynamicShippingOptions([])
+                        setDynamicShippingError(null)
+                        setShippingChoice('')
+                        setErrors((current) => ({
+                          ...current,
+                          provinceId: undefined,
+                          cantonId: undefined,
+                        }))
+                      }}
+                    >
+                      <option value="">
+                        {provincesLoading ? 'Cargando provincias…' : 'Selecciona una provincia'}
+                      </option>
+                      {provinces.map((province) => (
+                        <option key={province.id} value={province.id}>
+                          {province.name}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.provinceId ? (
+                      <p id="checkout-province-error" className={styles.fieldError}>
+                        {errors.provinceId}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className={styles.field}>
+                    <label htmlFor="checkout-canton">Cantón *</label>
+                    <select
+                      id="checkout-canton"
+                      value={form.cantonId}
+                      required
+                      disabled={!form.provinceId || cantonsLoading}
+                      aria-invalid={errors.cantonId ? true : undefined}
+                      aria-describedby={errors.cantonId ? 'checkout-canton-error' : undefined}
+                      onChange={(event) => {
+                        const nextCantonId = event.target.value
+                        const canton = cantons.find((c) => c.id === nextCantonId)
+                        setForm((current) => ({
+                          ...current,
+                          cantonId: nextCantonId,
+                          city: canton?.name ?? '',
+                        }))
+                        if (!nextCantonId) {
+                          setDynamicShippingOptions([])
+                          setDynamicShippingError(null)
+                        }
+                        setShippingChoice('')
+                        setErrors((current) => ({
+                          ...current,
+                          cantonId: undefined,
+                          city: undefined,
+                        }))
+                      }}
+                    >
+                      <option value="">
+                        {!form.provinceId
+                          ? 'Elige primero una provincia'
+                          : cantonsLoading
+                            ? 'Cargando cantones…'
+                            : 'Selecciona un cantón'}
+                      </option>
+                      {cantons.map((canton) => (
+                        <option key={canton.id} value={canton.id}>
+                          {canton.name}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.cantonId ? (
+                      <p id="checkout-canton-error" className={styles.fieldError}>
+                        {errors.cantonId}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <TextField
+                  id="checkout-city"
+                  label="Ciudad"
+                  value={form.city}
+                  error={errors.city}
+                  required
+                  autoComplete="address-level2"
+                  onChange={updateField('city')}
+                />
+              )}
               <TextField
                 id="checkout-address"
                 label="Dirección"
@@ -506,15 +762,6 @@ export function CheckoutPage() {
                 required
                 autoComplete="street-address"
                 onChange={updateField('address')}
-              />
-              <TextField
-                id="checkout-city"
-                label="Ciudad"
-                value={form.city}
-                error={errors.city}
-                required
-                autoComplete="address-level2"
-                onChange={updateField('city')}
               />
               <TextField
                 id="checkout-reference"
@@ -552,25 +799,90 @@ export function CheckoutPage() {
 
             <fieldset className={styles.group}>
               <legend className={styles.legend}>Método de envío</legend>
-              <div className={styles.optionList}>
-                {options.shippingMethods.map((method) => (
-                  <label key={method.code} className={styles.option}>
-                    <input
-                      type="radio"
-                      name="shippingMethod"
-                      value={method.code}
-                      checked={shippingMethod === method.code}
-                      onChange={() => setShippingChoice(method.code)}
-                    />
-                    <span className={styles.optionBody}>
-                      <span className={styles.optionLabel}>{method.label}</span>
-                      <span className={styles.optionCost}>
-                        {method.cost > 0 ? formatPrice(method.cost) : 'Gratis'}
+              {dynamicShippingEnabled ? (
+                !form.cantonId ? (
+                  <p className={styles.shippingNotice}>
+                    Selecciona tu provincia y cantón para ver los transportistas y tarifas de envío disponibles.
+                  </p>
+                ) : dynamicShippingLoading ? (
+                  <p className={styles.shippingNotice} role="status">
+                    Calculando tarifas de envío para {selectedCanton?.name ?? 'tu cantón'}…
+                  </p>
+                ) : dynamicShippingError ? (
+                  <p className={styles.shippingNotice} role="alert">
+                    {dynamicShippingError}
+                  </p>
+                ) : dynamicShippingOptions.length === 0 ? (
+                  <p className={styles.shippingNotice}>
+                    Por el momento no tenemos cobertura de envío configurada para{' '}
+                    <strong>{selectedCanton?.name ?? 'este cantón'}</strong>. Elige otro cantón o contáctanos por WhatsApp.
+                  </p>
+                ) : (
+                  <div className={styles.optionList}>
+                    {dynamicShippingOptions.map((method) => {
+                      const key = shippingOptionKey(method)
+                      const isChecked =
+                        selectedDynamicShipping !== null &&
+                        shippingOptionKey(selectedDynamicShipping) === key
+                      return (
+                        <label key={key} className={styles.option}>
+                          <input
+                            type="radio"
+                            name="shippingMethod"
+                            value={key}
+                            checked={isChecked}
+                            onChange={() => setShippingChoice(key)}
+                          />
+                          <span className={styles.optionBody}>
+                            <span className={styles.optionHeader}>
+                              <span className={styles.optionLabel}>{method.label}</span>
+                              <span className={styles.optionCost}>
+                                {method.cost > 0 ? formatPrice(method.cost) : 'Gratis'}
+                              </span>
+                            </span>
+                            {method.description ? (
+                              <span className={styles.optionHint}>{method.description}</span>
+                            ) : null}
+                            {method.estimatedDays ||
+                            (!method.isFreeShipping && method.freeShippingMinAmount) ? (
+                              <span className={styles.optionMeta}>
+                                {[
+                                  method.estimatedDays ? `Entrega estimada: ${method.estimatedDays}` : null,
+                                  !method.isFreeShipping && method.freeShippingMinAmount
+                                    ? `Gratis desde ${formatPrice(method.freeShippingMinAmount)}`
+                                    : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </span>
+                            ) : null}
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                )
+              ) : (
+                <div className={styles.optionList}>
+                  {options.shippingMethods.map((method) => (
+                    <label key={method.code} className={styles.option}>
+                      <input
+                        type="radio"
+                        name="shippingMethod"
+                        value={method.code}
+                        checked={shippingMethod === method.code}
+                        onChange={() => setShippingChoice(method.code)}
+                      />
+                      <span className={styles.optionBody}>
+                        <span className={styles.optionLabel}>{method.label}</span>
+                        <span className={styles.optionCost}>
+                          {method.cost > 0 ? formatPrice(method.cost) : 'Gratis'}
+                        </span>
                       </span>
-                    </span>
-                  </label>
-                ))}
-              </div>
+                    </label>
+                  ))}
+                </div>
+              )}
             </fieldset>
 
             <div className={styles.field}>

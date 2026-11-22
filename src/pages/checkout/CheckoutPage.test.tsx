@@ -15,17 +15,26 @@ vi.mock('@/api/checkoutApi', () => ({
   getCheckoutOptions: vi.fn(),
   calculateStorefrontQuote: vi.fn(),
   createStorefrontOrder: vi.fn(),
+  listEcuadorProvinces: vi.fn(),
+  listEcuadorCantons: vi.fn(),
+  listStorefrontShippingOptions: vi.fn(),
 }))
 
 import {
   calculateStorefrontQuote,
   createStorefrontOrder,
   getCheckoutOptions,
+  listEcuadorCantons,
+  listEcuadorProvinces,
+  listStorefrontShippingOptions,
 } from '@/api/checkoutApi'
 
 const mockedGetOptions = vi.mocked(getCheckoutOptions)
 const mockedCalculateQuote = vi.mocked(calculateStorefrontQuote)
 const mockedCreateOrder = vi.mocked(createStorefrontOrder)
+const mockedListProvinces = vi.mocked(listEcuadorProvinces)
+const mockedListCantons = vi.mocked(listEcuadorCantons)
+const mockedListShippingOptions = vi.mocked(listStorefrontShippingOptions)
 
 const options: CheckoutOptions = {
   paymentMethods: [
@@ -373,5 +382,70 @@ describe('CheckoutPage', () => {
     expect(screen.getByText('Subtotal (sin IVA)')).toBeInTheDocument()
     expect(screen.getByText('IVA (15% incluido)')).toBeInTheDocument()
     expect(screen.getByText(`-${formatPrice(0.6)}`)).toBeInTheDocument()
+  })
+
+  it('permite seleccionar provincia, cantón y método de envío dinámico con tarifa calculada', async () => {
+    mockedGetOptions.mockResolvedValue({
+      ...options,
+      dynamicShippingEnabled: true,
+    })
+    mockedListProvinces.mockResolvedValue([
+      { id: 'prov-guayas', code: '09', name: 'Guayas', region: 'Costa', sortOrder: 1 },
+    ])
+    mockedListCantons.mockResolvedValue([
+      {
+        id: 'canton-gye',
+        provinceId: 'prov-guayas',
+        code: '0901',
+        name: 'Guayaquil',
+        isProvincialCapital: true,
+        sortOrder: 1,
+      },
+    ])
+    mockedListShippingOptions.mockResolvedValue([
+      {
+        code: 'Courier',
+        shippingMethodId: 'method-servi',
+        label: 'Servientrega',
+        description: 'Entrega a domicilio',
+        estimatedDays: '24 a 48 horas',
+        cost: 3.5,
+        isFreeShipping: false,
+        freeShippingMinAmount: 50,
+      },
+    ])
+
+    renderPage()
+
+    await screen.findByText('Transferencia bancaria')
+
+    await userEvent.type(screen.getByLabelText(/Nombre completo/), 'Ana Pérez')
+    await userEvent.type(screen.getByLabelText(/^Email/), 'ana@example.com')
+    await userEvent.type(screen.getByLabelText(/^Teléfono/), '0991234567')
+    await userEvent.selectOptions(await screen.findByLabelText(/^Provincia/), 'prov-guayas')
+    await userEvent.selectOptions(await screen.findByLabelText(/^Cantón/), 'canton-gye')
+    await userEvent.type(screen.getByLabelText(/^Dirección/), 'Av. 9 de Octubre 100')
+
+    expect(await screen.findByRole('radio', { name: /Servientrega/ })).toBeChecked()
+    const summary = screen.getByRole('complementary', { name: 'Resumen del pedido' })
+    expect(within(summary).getByText(formatPrice(3.5))).toBeInTheDocument()
+
+    await acceptPrivacyConsent()
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    expect(await screen.findByText('Pedido confirmado')).toBeInTheDocument()
+    expect(mockedCreateOrder).toHaveBeenCalledWith(
+      'tenant-1',
+      expect.objectContaining({
+        shippingMethod: 'Courier',
+        shippingMethodId: 'method-servi',
+        shipping: expect.objectContaining({
+          city: 'Guayaquil',
+          province: 'Guayas',
+          provinceId: 'prov-guayas',
+          cantonId: 'canton-gye',
+        }),
+      }),
+    )
   })
 })

@@ -3,9 +3,12 @@ import type {
   CalculateStorefrontQuoteInput,
   CheckoutOptions,
   CreateStorefrontOrderInput,
+  EcuadorCanton,
+  EcuadorProvince,
   PaymentProofUploadResult,
   StorefrontCheckoutQuote,
   StorefrontOrderResult,
+  StorefrontShippingOption,
 } from './types'
 
 function storefrontUrl(tenantId: string, path: string): string {
@@ -33,7 +36,45 @@ export async function getCheckoutOptions(
     minOrderAmount: data.minOrderAmount ?? null,
     taxRate: data.taxRate ?? 0.15,
     pricesIncludeTax: data.pricesIncludeTax ?? true,
+    dynamicShippingEnabled: data.dynamicShippingEnabled ?? false,
   }
+}
+
+export async function listEcuadorProvinces(
+  signal?: AbortSignal,
+): Promise<EcuadorProvince[]> {
+  const response = await api.get<EcuadorProvince[]>(
+    '/api/v1/public/storefront/ecuador/provinces',
+    { signal },
+  )
+  return response.data
+}
+
+export async function listEcuadorCantons(
+  provinceId: string,
+  signal?: AbortSignal,
+): Promise<EcuadorCanton[]> {
+  const response = await api.get<EcuadorCanton[]>(
+    `/api/v1/public/storefront/ecuador/provinces/${provinceId}/cantons`,
+    { signal },
+  )
+  return response.data
+}
+
+export async function listStorefrontShippingOptions(
+  tenantId: string,
+  cantonId: string,
+  subtotal: number,
+  signal?: AbortSignal,
+): Promise<StorefrontShippingOption[]> {
+  const response = await api.get<StorefrontShippingOption[]>(
+    storefrontUrl(tenantId, '/shipping-options'),
+    {
+      params: { cantonId, subtotal },
+      signal,
+    },
+  )
+  return response.data
 }
 
 export async function calculateStorefrontQuote(

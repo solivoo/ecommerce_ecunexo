@@ -196,6 +196,34 @@ export interface CheckoutPaymentMethod {
   instructions: string | null
 }
 
+export interface EcuadorProvince {
+  id: string
+  code: string
+  name: string
+  region: string
+  sortOrder: number
+}
+
+export interface EcuadorCanton {
+  id: string
+  provinceId: string
+  code: string
+  name: string
+  isProvincialCapital: boolean
+  sortOrder: number
+}
+
+export interface StorefrontShippingOption {
+  code: string
+  shippingMethodId?: string | null
+  label: string
+  description?: string | null
+  estimatedDays?: string | null
+  cost: number
+  isFreeShipping?: boolean
+  freeShippingMinAmount?: number | null
+}
+
 export interface CheckoutShippingMethod {
   code: string
   label: string
@@ -214,12 +242,16 @@ export interface CheckoutOptions {
   taxRate?: number
   /** True cuando los precios de catálogo ya incluyen IVA. */
   pricesIncludeTax?: boolean
+  /** True cuando el tenant tiene couriers/tarifas por cantón activos. */
+  dynamicShippingEnabled?: boolean
 }
 
 export interface CalculateStorefrontQuoteInput {
   items: CreateStorefrontOrderItemInput[]
   shippingMethod?: string | null
   couponCode?: string | null
+  cantonId?: string | null
+  shippingMethodId?: string | null
 }
 
 export interface StorefrontCheckoutQuoteLine {
@@ -263,6 +295,9 @@ export interface CreateStorefrontOrderShippingInput {
   address: string
   city: string
   reference: string | null
+  province?: string | null
+  provinceId?: string | null
+  cantonId?: string | null
 }
 
 export interface CreateStorefrontOrderItemInput {
@@ -276,6 +311,7 @@ export interface CreateStorefrontOrderInput {
   shipping: CreateStorefrontOrderShippingInput
   paymentMethod: string
   shippingMethod: string
+  shippingMethodId?: string | null
   items: CreateStorefrontOrderItemInput[]
   notes: string | null
   /** Campo trampa anti-bot: debe ir vacío. */

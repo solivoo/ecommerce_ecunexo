@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { getStorefrontStatus } from '@/api/catalogApi'
-import type { StorefrontStatus } from '@/api/types'
+import type { StorefrontSocialLinks, StorefrontStatus } from '@/api/types'
 import type { RequestStatus } from './requestStatus'
 import { selectStorefrontTenantId, type StorefrontState } from './storefrontSlice'
 
@@ -13,6 +13,7 @@ export interface StorefrontStatusState {
   /** Tienda en mantenimiento: la SPA muestra pantalla de mantenimiento y no permite comprar. */
   maintenanceEnabled: boolean
   maintenanceMessage: string
+  socialLinks: StorefrontSocialLinks | null
   /** Revisión con la que se renderizó el contenido que ve el visitante. */
   appliedRevision: string | null
   /** Revisión nueva detectada, a la espera de estabilizarse. */
@@ -111,6 +112,7 @@ export function resolveStatusTransition(
 const initialState: StorefrontStatusState = {
   maintenanceEnabled: false,
   maintenanceMessage: '',
+  socialLinks: null,
   appliedRevision: readStoredRevision(),
   pendingRevision: null,
   stableChecks: 0,
@@ -154,6 +156,7 @@ const slice = createSlice({
 
         state.maintenanceEnabled = payload.maintenanceEnabled ?? false
         state.maintenanceMessage = payload.maintenanceMessage ?? ''
+        state.socialLinks = payload.socialLinks ?? null
 
         const transition = resolveStatusTransition(state, payload.revision)
         state.appliedRevision = transition.appliedRevision
@@ -187,3 +190,7 @@ export const selectStorefrontMaintenanceEnabled = (state: StorefrontStatusRootSt
 
 export const selectStorefrontMaintenanceMessage = (state: StorefrontStatusRootState): string =>
   state.storefrontStatus.maintenanceMessage
+
+export const selectStorefrontSocialLinks = (
+  state: StorefrontStatusRootState,
+): StorefrontSocialLinks | null => state.storefrontStatus.socialLinks

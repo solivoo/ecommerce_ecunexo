@@ -17,9 +17,33 @@
   color: var(--ink-soft);
 }
 
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 .brand {
   font-weight: 800;
   color: var(--ink);
+}
+
+.social {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 0.25rem);
+}
+
+.socialLink {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--ink);
+}
+
+.socialLink:hover {
+  color: var(--store-accent, var(--ok));
 }
 
 .meta {

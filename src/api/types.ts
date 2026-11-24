@@ -26,6 +26,12 @@ export const STOREFRONT_FACET_KEYS = [
 
 export type StorefrontFacetKey = (typeof STOREFRONT_FACET_KEYS)[number]
 
+export interface StorefrontSocialLinks {
+  instagram?: string | null
+  facebook?: string | null
+  tiktok?: string | null
+}
+
 export interface StorefrontConfig {
   tenantId: string
   name: string
@@ -33,6 +39,7 @@ export interface StorefrontConfig {
   primaryColorHex: string | null
   locale: string
   currency: string
+  socialLinks?: StorefrontSocialLinks | null
 }
 
 export interface StorefrontStatus {
@@ -40,6 +47,7 @@ export interface StorefrontStatus {
   updatedAt: string | null
   maintenanceEnabled?: boolean
   maintenanceMessage?: string | null
+  socialLinks?: StorefrontSocialLinks | null
 }
 
 export interface CatalogQuery {

@@ -222,6 +222,18 @@
   color: var(--danger, #b91c1c);
 }
 
+.notice {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3);
+  border: var(--border-w) solid color-mix(in srgb, var(--alert) 35%, transparent);
+  border-radius: var(--radius-sm);
+  background-color: color-mix(in srgb, var(--alert) 7%, var(--surface));
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .checkout,
 .secondary {
   display: block;

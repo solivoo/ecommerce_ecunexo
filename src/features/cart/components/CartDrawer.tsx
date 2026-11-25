@@ -272,17 +272,17 @@ export function CartDrawer() {
             <strong>{formatPrice(displaySubtotal)}</strong>
           </p>
           {activeQuoteError ? (
-            <p className={styles.minWarning} role="alert">
+            <p className={styles.notice} role="alert">
               {activeQuoteError}
             </p>
           ) : null}
           {belowMinItems.length > 0 ? (
-            <p className={styles.minWarning} role="alert">
+            <p className={styles.notice} role="alert">
               Hay productos por debajo de su compra mínima.
             </p>
           ) : null}
           {belowMinAmount ? (
-            <p className={styles.minWarning} role="alert">
+            <p className={styles.notice} role="alert">
               El pedido mínimo es {formatPrice(minOrderAmount)}.
             </p>
           ) : null}

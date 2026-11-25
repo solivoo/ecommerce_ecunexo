@@ -140,19 +140,13 @@ export function CatalogPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [filtersOpen])
 
-  useEffect(() => {
-    if (query.page > 1) {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }, [query.page])
-
   const updateQuery = useCallback(
-    (patch: Partial<CatalogQueryState>) => {
+    (patch: Partial<CatalogQueryState>, options?: { preventScrollReset?: boolean }) => {
       const next: CatalogQueryState = { ...query, ...patch, page: patch.page ?? 1 }
       if ('filters' in patch) {
         next.search = ''
       }
-      setSearchParams(buildSearchParams(next))
+      setSearchParams(buildSearchParams(next), options)
     },
     [query, setSearchParams],
   )
@@ -333,7 +327,7 @@ export function CatalogPage() {
                 page={query.page}
                 pageSize={query.pageSize}
                 totalCount={totalCount}
-                onPageChange={(page) => updateQuery({ page })}
+                onPageChange={(page) => updateQuery({ page }, { preventScrollReset: true })}
               />
             </>
           )}

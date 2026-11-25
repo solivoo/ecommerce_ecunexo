@@ -1,6 +1,6 @@
 import type { StorefrontMatrixAxis, StorefrontVariant } from '@/api/types'
 import { cx } from '@/lib/cx'
-import { resolveColorHex } from '../utils/colorSwatch'
+import { useColorPalette } from '../hooks/useColorPalette'
 import {
   availableAxisValues,
   type VariantSelection,
@@ -15,6 +15,7 @@ interface VariantSelectorProps {
 }
 
 export function VariantSelector({ axes, variants, selection, onChange }: VariantSelectorProps) {
+  const palette = useColorPalette()
   return (
     <div className={styles.selector}>
       {axes.map((axis) => {
@@ -34,7 +35,7 @@ export function VariantSelector({ axes, variants, selection, onChange }: Variant
                 const selected = selection[axis.name] === value
 
                 if (isColor) {
-                  const hex = resolveColorHex(value)
+                  const hex = palette.hexFor(value)
                   return (
                     <button
                       key={value}

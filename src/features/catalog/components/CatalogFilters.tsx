@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import type { CSSProperties, FormEvent } from 'react'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
 import type { StorefrontFacetAttribute, StorefrontFacets } from '@/api/types'
 import { cx } from '@/lib/cx'
 import { formatPrice } from '@/lib/format'
@@ -9,7 +9,7 @@ import type {
   CatalogSort,
 } from '@/store/catalogSlice'
 import type { RequestStatus } from '@/store/requestStatus'
-import { isHexColorValue, resolveColorHex, resolveColorName } from '../utils/colorSwatch'
+import { useColorPalette } from '../hooks/useColorPalette'
 import styles from './CatalogFilters.module.css'
 
 interface CatalogFiltersProps {
@@ -21,11 +21,6 @@ interface CatalogFiltersProps {
 
 const MAX_VISIBLE_VALUES = 8
 
-function swatchStyle(label: string): CSSProperties | undefined {
-  const hex = resolveColorHex(label)
-  return hex ? { backgroundColor: hex } : undefined
-}
-
 interface FacetGroupProps {
   attribute: StorefrontFacetAttribute
   selected: string[]
@@ -35,35 +30,12 @@ interface FacetGroupProps {
 function FacetGroup({ attribute, selected, onToggle }: FacetGroupProps) {
   const [expanded, setExpanded] = useState(false)
   const isColor = attribute.key === 'color'
+  const palette = useColorPalette()
+  const allValues = attribute.values
 
-  const normalizedValues = useMemo(() => {
-    if (!isColor) return attribute.values
-
-    const map = new Map<string, { value: string; label: string; count: number; rawValues: string[] }>()
-    for (const fv of attribute.values) {
-      const canonicalName = isHexColorValue(fv.label)
-        ? (resolveColorName(fv.label) ?? fv.label)
-        : (resolveColorName(fv.label) ?? fv.label)
-
-      const existing = map.get(canonicalName)
-      if (existing) {
-        existing.count += fv.count
-        existing.rawValues.push(fv.value)
-      } else {
-        map.set(canonicalName, {
-          value: fv.value,
-          label: canonicalName,
-          count: fv.count,
-          rawValues: [fv.value],
-        })
-      }
-    }
-    return Array.from(map.values())
-  }, [attribute.values, isColor])
-
-  const hasMore = normalizedValues.length > MAX_VISIBLE_VALUES
+  const hasMore = allValues.length > MAX_VISIBLE_VALUES
   const values =
-    hasMore && !expanded ? normalizedValues.slice(0, MAX_VISIBLE_VALUES) : normalizedValues
+    hasMore && !expanded ? allValues.slice(0, MAX_VISIBLE_VALUES) : allValues
 
   return (
     <section className={styles.group} aria-labelledby={`facet-${attribute.key}`}>
@@ -72,11 +44,8 @@ function FacetGroup({ attribute, selected, onToggle }: FacetGroupProps) {
       </h2>
       <div className={styles.list}>
         {values.map((facetValue) => {
-          const checked = 'rawValues' in facetValue
-            ? (facetValue as { rawValues: string[] }).rawValues.some((v) => selected.includes(v)) || selected.includes(facetValue.label)
-            : selected.includes(facetValue.value)
-          const hex = isColor ? resolveColorHex(facetValue.label) : null
-          const hideLabel = isColor && isHexColorValue(facetValue.label)
+          const checked = selected.includes(facetValue.value)
+          const hex = isColor ? palette.hexFor(facetValue.label) : null
           return (
             <label
               key={facetValue.label}
@@ -91,16 +60,12 @@ function FacetGroup({ attribute, selected, onToggle }: FacetGroupProps) {
               {hex ? (
                 <span
                   className={styles.swatch}
-                  style={swatchStyle(facetValue.label)}
+                  style={{ backgroundColor: hex }}
                   title={facetValue.label}
                   aria-hidden="true"
                 />
               ) : null}
-              {hideLabel ? (
-                <span className="visually-hidden">{facetValue.label}</span>
-              ) : (
-                <span className={styles.optionLabel}>{facetValue.label}</span>
-              )}
+              <span className={styles.optionLabel}>{facetValue.label}</span>
               <span className={styles.optionCount}>{facetValue.count}</span>
             </label>
           )

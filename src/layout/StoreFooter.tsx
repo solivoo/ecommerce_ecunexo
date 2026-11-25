@@ -12,6 +12,7 @@ const SOCIAL_LINKS = [
   { key: 'instagram', label: 'Instagram' },
   { key: 'facebook', label: 'Facebook' },
   { key: 'tiktok', label: 'TikTok' },
+  { key: 'whatsapp', label: 'WhatsApp' },
 ] as const
 
 function socialHref(links: StorefrontSocialLinks | null | undefined, key: (typeof SOCIAL_LINKS)[number]['key']) {
@@ -42,9 +43,16 @@ function SocialIcon({ name }: { name: (typeof SOCIAL_LINKS)[number]['key'] }) {
       </svg>
     )
   }
+  if (name === 'tiktok') {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M14.5 3c.4 2.4 1.8 4 4 4.2v2.6c-1.4 0-2.7-.4-3.8-1.1v6.6c0 3.2-2.6 5.7-5.8 5.7S3.1 18.5 3.1 15.3 5.7 9.6 8.9 9.6c.3 0 .7 0 1 .1v2.8a3 3 0 0 0-1-.2 2.9 2.9 0 0 0 0 5.8 2.9 2.9 0 0 0 2.9-2.9V3h2.7z" />
+      </svg>
+    )
+  }
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M14.5 3c.4 2.4 1.8 4 4 4.2v2.6c-1.4 0-2.7-.4-3.8-1.1v6.6c0 3.2-2.6 5.7-5.8 5.7S3.1 18.5 3.1 15.3 5.7 9.6 8.9 9.6c.3 0 .7 0 1 .1v2.8a3 3 0 0 0-1-.2 2.9 2.9 0 0 0 0 5.8 2.9 2.9 0 0 0 2.9-2.9V3h2.7z" />
+      <path d="M12.04 3C7.31 3 3.5 6.7 3.5 11.3c0 1.46.4 2.88 1.15 4.12L3.4 21l5.72-1.2a8.7 8.7 0 0 0 2.92.5c4.73 0 8.54-3.7 8.54-8.3S16.77 3 12.04 3zm4.98 11.72c-.2.58-1.18 1.08-1.64 1.14-.42.06-.96.08-1.55-.1-.36-.1-.82-.26-1.42-.52-2.5-1.08-4.12-3.6-4.24-3.77-.12-.16-1-1.32-1-2.52s.62-1.78.84-2.02c.2-.24.46-.3.62-.3h.44c.14 0 .34-.02.52.4.2.46.66 1.6.72 1.72.06.12.1.26.02.42-.08.16-.12.26-.24.4-.12.14-.26.3-.36.4-.12.12-.24.24-.1.46.14.22.62 1.02 1.34 1.66.92.82 1.7 1.08 1.94 1.2.24.12.38.1.52-.06.14-.16.6-.7.76-.94.16-.24.32-.2.54-.12.22.08 1.4.66 1.64.78.24.12.4.18.46.28.06.1.06.58-.14 1.16z" />
     </svg>
   )
 }

@@ -17,6 +17,8 @@ export interface CartItem {
   thumbUrl: string | null
   /** Cantidad mínima de compra del producto/variante (1 por defecto). */
   minOrderQuantity?: number
+  /** Stock disponible real. `null` = sin límite por stock. `undefined` = aún no consultado. */
+  availableQuantity?: number | null
 }
 
 export interface CartState {
@@ -29,9 +31,9 @@ const initialState: CartState = {
   tenantId: null,
 }
 
-function clampQuantity(quantity: number): number {
+function clampQuantity(quantity: number, max = CART_MAX_QUANTITY): number {
   if (!Number.isFinite(quantity)) return 1
-  return Math.min(CART_MAX_QUANTITY, Math.max(1, Math.trunc(quantity)))
+  return Math.min(max, Math.max(1, Math.trunc(quantity)))
 }
 
 function sanitizeItem(value: unknown): CartItem | null {
@@ -77,6 +79,14 @@ function sanitizeItem(value: unknown): CartItem | null {
     quantity: clampQuantity(typeof quantity === 'number' ? quantity : 1),
     thumbUrl: typeof thumbUrl === 'string' && thumbUrl.trim() ? thumbUrl : null,
     minOrderQuantity,
+    availableQuantity:
+      candidate.availableQuantity === null
+        ? null
+        : typeof candidate.availableQuantity === 'number' &&
+            Number.isFinite(candidate.availableQuantity) &&
+            candidate.availableQuantity >= 0
+          ? Math.trunc(candidate.availableQuantity)
+          : undefined,
   }
 }
 
@@ -128,6 +138,23 @@ const cartSlice = createSlice({
 
       if (existing) {
         existing.quantity = clampQuantity(existing.quantity + item.quantity)
+        existing.availableQuantity = item.availableQuantity
+      } else {
+        state.items.push(item)
+      }
+    },
+    /** Deja la cantidad exacta del producto en el carrito (no suma). Usado desde la ficha. */
+    upsertItem(state, action: PayloadAction<CartItem>) {
+      const item = sanitizeItem(action.payload)
+      if (!item) return
+
+      const existing = state.items.find(
+        (candidate) => candidate.catalogItemId === item.catalogItemId,
+      )
+
+      if (existing) {
+        existing.quantity = item.quantity
+        existing.availableQuantity = item.availableQuantity
       } else {
         state.items.push(item)
       }
@@ -140,7 +167,27 @@ const cartSlice = createSlice({
         (candidate) => candidate.catalogItemId === action.payload.catalogItemId,
       )
       if (!item) return
-      item.quantity = clampQuantity(action.payload.quantity)
+      const max = item.availableQuantity ?? CART_MAX_QUANTITY
+      item.quantity = clampQuantity(action.payload.quantity, max)
+    },
+    /**
+     * Recorta las cantidades guardadas al stock real que reporta la cotización.
+     * `availableQuantity === null` significa que el producto no tiene límite por stock.
+     */
+    applyAvailability(
+      state,
+      action: PayloadAction<Array<{ catalogItemId: string; availableQuantity: number | null }>>,
+    ) {
+      for (const line of action.payload) {
+        const item = state.items.find(
+          (candidate) => candidate.catalogItemId === line.catalogItemId,
+        )
+        if (!item) continue
+        item.availableQuantity = line.availableQuantity
+        if (line.availableQuantity !== null && item.quantity > line.availableQuantity) {
+          item.quantity = Math.max(1, Math.trunc(line.availableQuantity))
+        }
+      }
     },
     removeItem(state, action: PayloadAction<string>) {
       state.items = state.items.filter(
@@ -162,7 +209,7 @@ const cartSlice = createSlice({
   },
 })
 
-export const { hydrateCart, addItem, setQuantity, removeItem, clearCart } =
+export const { hydrateCart, addItem, upsertItem, setQuantity, applyAvailability, removeItem, clearCart } =
   cartSlice.actions
 
 export const cartReducer = cartSlice.reducer

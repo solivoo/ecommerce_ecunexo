@@ -151,10 +151,9 @@ export const fetchFacets = createAsyncThunk<
     }
   },
   {
-    condition: (_, { getState }) => {
-      const status = getState().catalog.facetsStatus
-      return status !== 'loading' && status !== 'succeeded'
-    },
+    // Solo se omite si ya hay facetas. No bloquear mientras está en 'loading':
+    // StrictMode monta dos veces, la primera petición se aborta y la segunda debe correr.
+    condition: (_, { getState }) => getState().catalog.facetsStatus !== 'succeeded',
   },
 )
 

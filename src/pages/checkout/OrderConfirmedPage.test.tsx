@@ -45,6 +45,7 @@ function renderPage(state?: StorefrontOrderResult) {
         },
         status: 'succeeded' as const,
         error: null,
+        colorPalette: [],
       },
     },
   })

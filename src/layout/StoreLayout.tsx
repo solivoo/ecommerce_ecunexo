@@ -9,6 +9,7 @@ import { STORE_NAME } from '@/lib/store'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
   bootstrapStorefront,
+  loadStorefrontColorPalette,
   selectStorefrontConfig,
   selectStorefrontError,
   selectStorefrontStatus,
@@ -34,6 +35,13 @@ export function StoreLayout() {
     dispatch(bootstrapStorefront())
     void dispatch(checkStorefrontStatus())
   }, [dispatch])
+
+  const tenantId = config?.tenantId ?? null
+
+  useEffect(() => {
+    if (!tenantId) return
+    void dispatch(loadStorefrontColorPalette(tenantId))
+  }, [dispatch, tenantId])
 
   useEffect(() => {
     if (!config) return

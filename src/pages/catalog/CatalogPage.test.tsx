@@ -77,6 +77,7 @@ function renderPage(initialEntries: string[] = ['/']) {
         },
         status: 'succeeded' as const,
         error: null,
+        colorPalette: [],
       },
     },
   })

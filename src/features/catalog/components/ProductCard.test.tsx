@@ -57,6 +57,7 @@ function renderCard(value: StorefrontProduct = product) {
         },
         status: 'succeeded' as const,
         error: null,
+        colorPalette: [],
       },
     },
   })

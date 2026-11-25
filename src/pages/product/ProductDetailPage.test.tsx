@@ -118,6 +118,7 @@ function renderPage() {
         },
         status: 'succeeded' as const,
         error: null,
+        colorPalette: [{ name: 'Amarillo', hex: '#EAB308' }],
       },
     },
   })
@@ -236,6 +237,7 @@ describe('ProductDetailPage', () => {
         quantity: 2,
         thumbUrl: 'https://cdn/negro-thumb',
         minOrderQuantity: 1,
+        availableQuantity: 2,
       },
     ])
     expect(screen.getByRole('status')).toHaveTextContent('se agregó al carrito')

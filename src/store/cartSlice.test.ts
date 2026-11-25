@@ -12,6 +12,8 @@ import {
   selectCartCount,
   selectCartSubtotal,
   setQuantity,
+  upsertItem,
+  applyAvailability,
   writeStoredCart,
   type CartItem,
 } from './cartSlice'
@@ -146,5 +148,27 @@ describe('cartSlice', () => {
 
     const sameTenant = cartReducer({ ...state, tenantId: 'tenant-b' }, action)
     expect(sameTenant.items).toHaveLength(1)
+  })
+
+  it('upsertItem deja la cantidad exacta en vez de sumarla', () => {
+    let state = cartReducer(undefined, addItem(buildItem({ quantity: 5 })))
+    state = cartReducer(state, upsertItem(buildItem({ quantity: 5 })))
+    expect(state.items[0].quantity).toBe(5)
+  })
+
+  it('applyAvailability recorta la cantidad guardada al stock real', () => {
+    let state = cartReducer(undefined, addItem(buildItem({ quantity: 10 })))
+    state = cartReducer(
+      state,
+      applyAvailability([{ catalogItemId: 'item-1', availableQuantity: 2 }]),
+    )
+    expect(state.items[0].quantity).toBe(2)
+    expect(state.items[0].availableQuantity).toBe(2)
+
+    state = cartReducer(
+      state,
+      setQuantity({ catalogItemId: 'item-1', quantity: 9 }),
+    )
+    expect(state.items[0].quantity).toBe(2)
   })
 })

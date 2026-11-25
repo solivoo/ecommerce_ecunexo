@@ -103,6 +103,7 @@ function renderPage(cartItems: CartItem[] = items) {
         },
         status: 'succeeded' as const,
         error: null,
+        colorPalette: [],
       },
     },
   })

@@ -65,6 +65,7 @@ function renderDrawer(overrides: { items?: CartItem[]; withTenant?: boolean } = 
             },
             status: 'succeeded' as const,
             error: null,
+            colorPalette: [],
           },
         },
       })
@@ -123,7 +124,9 @@ describe('CartDrawer', () => {
   it('elimina ítems del carrito', async () => {
     const store = renderDrawer()
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Quitar' })[0])
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Eliminar Calcetín Runner del carrito' }),
+    )
 
     expect(store.getState().cart.items.map((item) => item.catalogItemId)).toEqual(['p2'])
     expect(screen.queryByText('Calcetín Runner')).not.toBeInTheDocument()

@@ -5,7 +5,7 @@ import { PriceTag } from '@/features/catalog/components/PriceTag'
 import { ProductGallery } from '@/features/catalog/components/ProductGallery'
 import { VariantSelector } from '@/features/catalog/components/VariantSelector'
 import { LikeButton } from '@/features/likes/LikeButton'
-import { resolveColorName } from '@/features/catalog/utils/colorSwatch'
+import { useColorPalette } from '@/features/catalog/hooks/useColorPalette'
 import {
   findVariant,
   initialSelection,
@@ -13,7 +13,7 @@ import {
   type VariantSelection,
 } from '@/features/catalog/utils/variantSelection'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
-import { CART_MAX_QUANTITY, addItem } from '@/store/cartSlice'
+import { upsertItem } from '@/store/cartSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectStorefrontName } from '@/store/storefrontSlice'
 import { openCartDrawer } from '@/store/uiSlice'
@@ -118,9 +118,7 @@ function ProductDetailContent({ product }: { product: StorefrontProductDetail })
   const displaySku = selectedVariant?.sku ?? product.sku
   const maxQuantity = !isAvailable
     ? 0
-    : quantityAvailable > 0
-      ? Math.min(CART_MAX_QUANTITY, Math.max(0, Math.floor(quantityAvailable)))
-      : CART_MAX_QUANTITY
+    : Math.max(0, Math.floor(quantityAvailable))
   const productMinQuantity = Math.max(1, Math.trunc(product.minOrderQuantity ?? 1))
   const minQuantity = selectedVariant
     ? Math.max(1, Math.trunc(selectedVariant.minOrderQuantity ?? productMinQuantity))
@@ -297,7 +295,7 @@ function AddToCartPanel({
     if (!canAdd || price === null) return
 
     dispatch(
-      addItem({
+      upsertItem({
         catalogItemId,
         name: productName,
         sku,
@@ -307,6 +305,7 @@ function AddToCartPanel({
         quantity,
         thumbUrl,
         minOrderQuantity: minQuantity,
+        availableQuantity: maxQuantity,
       }),
     )
     setAddedName(productName)
@@ -391,6 +390,7 @@ function AddToCartPanel({
 }
 
 function AttributeValue({ value }: { value: string }) {
+  const palette = useColorPalette()
   const parts = value
     .split(',')
     .map((part) => part.trim())
@@ -409,7 +409,7 @@ function AttributeValue({ value }: { value: string }) {
             style={{ backgroundColor: part }}
             aria-hidden="true"
           />
-          {resolveColorName(part) ?? part}
+          {palette.nameForHex(part) ?? part}
         </span>
       ))}
     </span>

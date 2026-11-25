@@ -7,7 +7,7 @@ import { PriceTag } from '@/features/catalog/components/PriceTag'
 import { formatPrice } from '@/lib/format'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
-  CART_MAX_QUANTITY,
+  applyAvailability,
   removeItem,
   selectCartItems,
   selectCartItemsBelowMinQuantity,
@@ -17,6 +17,15 @@ import {
 import { selectStorefrontTenantId } from '@/store/storefrontSlice'
 import { closeCartDrawer, selectCartDrawerOpen } from '@/store/uiSlice'
 import styles from './CartDrawer.module.css'
+
+function TrashIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  )
+}
 
 export function CartDrawer() {
   const dispatch = useAppDispatch()
@@ -77,6 +86,16 @@ export function CartDrawer() {
         if (controller.signal.aborted) return
         setQuote(data ?? null)
         setQuoteError(null)
+        if (data) {
+          dispatch(
+            applyAvailability(
+              data.items.map((line) => ({
+                catalogItemId: line.catalogItemId,
+                availableQuantity: line.availableQuantity ?? null,
+              })),
+            ),
+          )
+        }
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return
@@ -90,7 +109,7 @@ export function CartDrawer() {
       })
 
     return () => controller.abort()
-  }, [open, tenantId, items])
+  }, [dispatch, open, tenantId, items])
 
   useEffect(() => {
     if (!open) return
@@ -197,41 +216,54 @@ export function CartDrawer() {
                       <p className={styles.itemSku}>SKU: {item.sku}</p>
                     ) : null}
                     <div className={styles.itemFooter}>
-                      <div
-                        className={styles.quantity}
-                        role="group"
-                        aria-label={`Cantidad de ${item.name}`}
-                      >
+                      <div className={styles.quantityRow}>
+                        <div
+                          className={styles.quantity}
+                          role="group"
+                          aria-label={`Cantidad de ${item.name}`}
+                        >
+                          <button
+                            type="button"
+                            aria-label={`Quitar una unidad de ${item.name}`}
+                            disabled={item.quantity <= (item.minOrderQuantity ?? 1)}
+                            onClick={() =>
+                              dispatch(
+                                setQuantity({
+                                  catalogItemId: item.catalogItemId,
+                                  quantity: item.quantity - 1,
+                                }),
+                              )
+                            }
+                          >
+                            −
+                          </button>
+                          <span aria-live="polite">{item.quantity}</span>
+                          <button
+                            type="button"
+                            aria-label={`Agregar una unidad de ${item.name}`}
+                            disabled={
+                              item.availableQuantity === 0 ||
+                              item.quantity >= (item.availableQuantity ?? Number.POSITIVE_INFINITY)
+                            }
+                            onClick={() =>
+                              dispatch(
+                                setQuantity({
+                                  catalogItemId: item.catalogItemId,
+                                  quantity: item.quantity + 1,
+                                }),
+                              )
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
                         <button
                           type="button"
-                          aria-label={`Quitar una unidad de ${item.name}`}
-                          disabled={item.quantity <= (item.minOrderQuantity ?? 1)}
-                          onClick={() =>
-                            dispatch(
-                              setQuantity({
-                                catalogItemId: item.catalogItemId,
-                                quantity: item.quantity - 1,
-                              }),
-                            )
-                          }
+                          className={styles.removeItem}
+                          aria-label={`Eliminar ${item.name} del carrito`}
+                          onClick={() => dispatch(removeItem(item.catalogItemId))}
                         >
-                          −
-                        </button>
-                        <span aria-live="polite">{item.quantity}</span>
-                        <button
-                          type="button"
-                          aria-label={`Agregar una unidad de ${item.name}`}
-                          disabled={item.quantity >= CART_MAX_QUANTITY}
-                          onClick={() =>
-                            dispatch(
-                              setQuantity({
-                                catalogItemId: item.catalogItemId,
-                                quantity: item.quantity + 1,
-                              }),
-                            )
-                          }
-                        >
-                          +
+                          <TrashIcon />
                         </button>
                       </div>
                       <PriceTag
@@ -241,13 +273,6 @@ export function CartDrawer() {
                         discountPercent={lineDiscountPercent}
                       />
                     </div>
-                    <button
-                      type="button"
-                      className={styles.remove}
-                      onClick={() => dispatch(removeItem(item.catalogItemId))}
-                    >
-                      Quitar
-                    </button>
                     {item.quantity < (item.minOrderQuantity ?? 1) ? (
                       <p className={styles.minWarning}>
                         Mínimo {item.minOrderQuantity ?? 1} por producto.

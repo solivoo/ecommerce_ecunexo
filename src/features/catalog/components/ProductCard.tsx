@@ -4,7 +4,7 @@ import type { StorefrontProduct } from '@/api/types'
 import { LikeButton } from '@/features/likes/LikeButton'
 import { addItem } from '@/store/cartSlice'
 import { useAppDispatch } from '@/store/hooks'
-import { resolveColorHex } from '../utils/colorSwatch'
+import { useColorPalette } from '../hooks/useColorPalette'
 import { PriceTag } from './PriceTag'
 import styles from './ProductCard.module.css'
 
@@ -16,6 +16,7 @@ const MAX_VISIBLE_COLORS = 5
 
 export function ProductCard({ product }: ProductCardProps) {
   const dispatch = useAppDispatch()
+  const palette = useColorPalette()
   const imageUrl = product.mediumUrl ?? product.thumbUrl
   const hiddenColors = product.colors.length - MAX_VISIBLE_COLORS
   const canAdd = !product.hasVariants && product.inStock && product.price !== null
@@ -100,7 +101,7 @@ export function ProductCard({ product }: ProductCardProps) {
         {product.colors.length > 0 ? (
           <ul className={styles.swatches} aria-label="Colores disponibles">
             {product.colors.slice(0, MAX_VISIBLE_COLORS).map((color) => {
-              const hex = resolveColorHex(color)
+              const hex = palette.hexFor(color)
               return (
                 <li key={color}>
                   <span

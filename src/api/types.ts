@@ -30,6 +30,12 @@ export interface StorefrontSocialLinks {
   instagram?: string | null
   facebook?: string | null
   tiktok?: string | null
+  whatsapp?: string | null
+}
+
+export interface StorefrontColor {
+  name: string
+  hex: string
 }
 
 export interface StorefrontConfig {
@@ -273,6 +279,8 @@ export interface StorefrontCheckoutQuoteLine {
   lineTaxAmount: number
   lineTotal: number
   discountPercent?: number | null
+  /** Stock disponible real. `null` = el producto no tiene límite por stock. */
+  availableQuantity?: number | null
 }
 
 export interface StorefrontCheckoutQuote {

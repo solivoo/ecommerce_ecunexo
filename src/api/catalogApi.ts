@@ -6,6 +6,7 @@ import type {
   ProductLikeResult,
   RawStorefrontProduct,
   RawStorefrontProductDetail,
+  StorefrontColor,
   StorefrontFacets,
   StorefrontProduct,
   StorefrontProductDetail,
@@ -15,6 +16,14 @@ import type {
 
 function storefrontUrl(tenantId: string, path: string): string {
   return `/api/v1/public/tenants/${tenantId}/storefront${path}`
+}
+
+export async function listStorefrontColors(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<StorefrontColor[]> {
+  const { data } = await api.get<StorefrontColor[]>(storefrontUrl(tenantId, '/colors'), { signal })
+  return data
 }
 
 export async function getStorefrontStatus(

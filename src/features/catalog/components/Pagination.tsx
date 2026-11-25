@@ -6,6 +6,7 @@ interface PaginationProps {
   pageSize: number
   totalCount: number
   onPageChange: (page: number) => void
+  position?: 'top' | 'bottom'
 }
 
 function pageWindow(page: number, totalPages: number): number[] {
@@ -16,14 +17,23 @@ function pageWindow(page: number, totalPages: number): number[] {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index)
 }
 
-export function Pagination({ page, pageSize, totalCount, onPageChange }: PaginationProps) {
+export function Pagination({
+  page,
+  pageSize,
+  totalCount,
+  onPageChange,
+  position = 'bottom',
+}: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   if (totalPages <= 1) return null
 
   const pages = pageWindow(page, totalPages)
 
   return (
-    <nav className={styles.pagination} aria-label="Paginación">
+    <nav
+      className={cx(styles.pagination, position === 'top' && styles.top)}
+      aria-label={position === 'top' ? 'Paginación superior' : 'Paginación'}
+    >
       <button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
         Anterior
       </button>

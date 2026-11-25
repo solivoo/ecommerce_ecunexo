@@ -320,6 +320,13 @@ export function CatalogPage() {
             </div>
           ) : (
             <>
+              <Pagination
+                position="top"
+                page={query.page}
+                pageSize={query.pageSize}
+                totalCount={totalCount}
+                onPageChange={(page) => updateQuery({ page }, { preventScrollReset: true })}
+              />
               <div className={styles.gridWrap} data-loading={isLoading}>
                 <ProductGrid products={items} />
               </div>

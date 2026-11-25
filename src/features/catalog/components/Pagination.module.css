@@ -31,7 +31,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.active {
+.pagination .active,
+.pagination .active:hover:not(:disabled) {
   background-color: var(--ink);
   color: var(--paper);
 }

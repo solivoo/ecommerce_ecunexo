@@ -6,6 +6,8 @@ import { selectStorefrontSocialLinks } from '@/store/storefrontStatusSlice'
 import { selectStorefrontConfig } from '@/store/storefrontSlice'
 import styles from './StoreFooter.module.css'
 
+const ECUNEXO_URL = 'https://www.ecunexo.com'
+
 const SOCIAL_LINKS = [
   { key: 'instagram', label: 'Instagram' },
   { key: 'facebook', label: 'Facebook' },
@@ -78,6 +80,14 @@ export function StoreFooter() {
           <Link to="/privacidad" className={styles.legalLink}>
             Política de tratamiento de datos
           </Link>
+          <a
+            href={ECUNEXO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className={styles.creditLink}
+          >
+            Desarrollado por EcuNexo
+          </a>
         </div>
       </div>
     </footer>

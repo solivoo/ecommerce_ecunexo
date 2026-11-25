@@ -62,3 +62,13 @@
 .legalLink:hover {
   border-bottom-color: var(--store-accent, var(--ok));
 }
+
+.creditLink {
+  color: var(--ink-soft);
+  border-bottom: 1px solid transparent;
+}
+
+.creditLink:hover {
+  color: var(--ink);
+  border-bottom-color: var(--store-accent, var(--ok));
+}
